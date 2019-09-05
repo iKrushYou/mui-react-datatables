@@ -6,7 +6,6 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
 import TableBody from "@material-ui/core/TableBody";
-import hash from 'object-hash'
 import ButtonBase from "@material-ui/core/ButtonBase";
 import Chip from "@material-ui/core/Chip";
 import TextField from "@material-ui/core/TextField";
@@ -289,7 +288,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                                         : classes.sortIndicatorDesc
                                     : null
                                 return (
-                                    <TableCell key={hash(column)} {...column.props}
+                                    <TableCell key={column.id} {...column.props}
                                                style={{
                                                    width: !!column.shrink ? 1 : null,
                                                    position: "relative",
@@ -317,9 +316,9 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                 </TableHead>
                 <TableBody>
                     {!!data && data.map((item, itemIndex) => (
-                        <TableRow key={hash(item) + itemIndex}>
+                        <TableRow key={itemIndex}>
                             {!!visibleColumns && visibleColumns.map((column) => (
-                                <TableCell key={hash(column)} align={column.align}>
+                                <TableCell key={column.id} align={column.align}>
                                     {colValue(item, column.id)}
                                 </TableCell>
                             ))}
