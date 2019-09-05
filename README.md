@@ -1,8 +1,8 @@
-## Material-UI Dataforms
+## Material-UI React Datatablrs
 
-[![Build Status](https://travis-ci.com/iKrushYou/mui-dataforms.svg?branch=master)](https://travis-ci.com/iKrushYou/mui-dataforms)
-[![npm package](https://img.shields.io/npm/v/mui-dataforms/latest.svg)](https://www.npmjs.com/package/mui-dataforms)
-[![NPM Downloads](https://img.shields.io/npm/dt/mui-dataforms.svg?style=flat)](https://npmcharts.com/compare/mui-dataforms?minimal=true)
+[![Build Status](https://travis-ci.com/iKrushYou/mui-react-datatables.svg?branch=master)](https://travis-ci.com/iKrushYou/mui-dataforms)
+[![npm package](https://img.shields.io/npm/v/mui-react-datatables/latest.svg)](https://www.npmjs.com/package/mui-dataforms)
+[![NPM Downloads](https://img.shields.io/npm/dt/mui-react-datatables.svg?style=flat)](https://npmcharts.com/compare/mui-dataforms?minimal=true)
 
 MUI Dataforms is a library intended to assist in creating dynamic forms based on a JSON input. Fields are completely dynamic with a multitude of pre-defined components (with the option of custom components). 
 
@@ -10,17 +10,17 @@ MUI Dataforms is a library intended to assist in creating dynamic forms based on
 ### Installation
 
 ```
-npm install mui-dataforms
+npm install mui-react-datatables
 ```
 or
 ```
-yarn add mui-dataforms
+yarn add mui-react-datatables
 ```
-### Using the forms
+### Using the table
 ```
-import MUIDatatable from 'mui-dataforms'
+import MUIDatatable from 'mui-react-datatables'
 ```
-#### Define your fields
+#### --- DONT READ PAST THIS (INCOMPLETE) ---
 ```
 const fields = [
     {
