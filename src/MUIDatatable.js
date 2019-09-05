@@ -43,7 +43,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const defaultOptions = {
-    fillEmptyRows: true,
+    fillEmptyRows: false,
     rowsPerPage: 10,
 }
 
@@ -52,6 +52,16 @@ const defaultColumnValues = {
     sortable: true,
     hideable: true,
     filterable: true,
+}
+
+MUIDatatable.defaultProps = {
+    data: [],
+    columns: [],
+    options: {},
+    title: "",
+    buttons: [],
+    filtersRef: () => {},
+    sortsRef: () => {},
 }
 
 export default function MUIDatatable({data: dataInput, options, columns: columnsInput, title, buttons, filtersRef, sortsRef}) {
