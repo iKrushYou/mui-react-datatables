@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Collapse, makeStyles, Select, TableFooter, Tooltip, Typography} from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -11,6 +11,7 @@ import Chip from "@material-ui/core/Chip";
 import TextField from "@material-ui/core/TextField";
 import IconButton from "@material-ui/core/IconButton";
 import SearchIcon from "@material-ui/icons/Search"
+import SaveIcon from "@material-ui/icons/Save"
 import CloseIcon from "@material-ui/icons/Close"
 import FilterListIcon from "@material-ui/icons/FilterList"
 import ViewColumnIcon from "@material-ui/icons/ViewColumn"
@@ -24,6 +25,7 @@ import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import TablePagination from "@material-ui/core/TablePagination";
+import {CSVLink} from "react-csv";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -60,8 +62,10 @@ MUIDatatable.defaultProps = {
     options: {},
     title: "",
     buttons: [],
-    filtersRef: () => {},
-    sortsRef: () => {},
+    filtersRef: () => {
+    },
+    sortsRef: () => {
+    },
 }
 
 export default function MUIDatatable({data: dataInput, options, columns: columnsInput, title, buttons, filtersRef, sortsRef}) {
@@ -70,10 +74,13 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
 
     options = {...defaultOptions, ...options}
 
-    const [columns, setColumns] = useState([])
-    useEffect(() => {
-        setColumns([...columnsInput.map((column, index) => ({id: index, ...defaultColumnValues, ...column}))]) // enforce default values
-    }, [columnsInput])
+    // const [columns, setColumns] = useState([])
+    // useEffect(() => {
+    //     console.log('setting columns')
+    //     setColumns([...columnsInput.map((column, index) => ({id: index, ...defaultColumnValues, ...column}))]) // enforce default values
+    // }, [columnsInput])
+
+    const columns = useMemo(() => [...columnsInput.map((column, index) => ({id: index, ...defaultColumnValues, ...column}))], [columnsInput])
 
     let data = [...dataInput]
 
@@ -151,16 +158,28 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
 
     /*  Column Visibility  */
 
+    const [toggledColumns, setToggledColumns] = useState({})
+
+    useEffect(() => {
+        setToggledColumns(prev => ({
+            ...columns.reduce((toggled, column) => {
+                toggled[column.id] = column.visible
+                return toggled
+            }, {}),
+            ...prev
+        }))
+    }, [columns])
+
     const handleToggleColumnVisible = (columnId) => {
-        setColumns(prev => [...prev.map((column) => {
-            if (column.id === columnId) {
-                column.visible = !column.visible
-            }
-            return column
-        })])
+        setToggledColumns(prev => ({
+            ...prev,
+            [columnId]: !prev[columnId]
+        }))
     }
 
-    const visibleColumns = columns.filter(column => !!column.visible)
+    console.log('toggledColumns', toggledColumns)
+
+    const visibleColumns = columns.filter(column => toggledColumns[column.id])
 
 
     /*  Search Filtering  */
@@ -187,10 +206,9 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
 
     filters.forEach(filter => {
         if (filter.columnId === -1) {
-            data = data.filter(item =>
+            data = data.filter(row =>
                 visibleColumns
-                    .reduce((acc, current, index) =>
-                        acc || String(colValue(item, index)).toLowerCase().includes(String(filter.value).toLowerCase())
+                    .reduce((acc, column) => acc || String(colValue(row, column.id)).toLowerCase().includes(String(filter.value).toLowerCase())
                         , false)
             )
         } else {
@@ -217,14 +235,33 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     sortsRef(sorts)
 
 
-
     /*  Pagination  */
 
     const [currentPage, setCurrentPage] = useState(0)
 
-    const pageData = data.slice(currentPage * options.rowsPerPage, (currentPage + 1) * options.rowsPerPage )
+    const pageData = data.slice(currentPage * options.rowsPerPage, (currentPage + 1) * options.rowsPerPage)
 
     const emptyRows = new Array(Math.max(0, options.rowsPerPage - pageData.length)).fill(0)
+
+
+    /*  CSV Download  */
+
+    const csvValue = (item, columnId) => {
+        const c = columns[columnId]
+        return (!!c.csv && typeof c.csv.value === "function" && c.csv.value(item))
+            || colValue(item, columnId)
+    }
+
+    const generateCsvData = () => {
+        if (!data) return [[]]
+        const headers = visibleColumns.map(column => (!!column.csv && column.csv.header) || column.title)
+        const csvData = [
+            headers,
+            ...data.map(row => visibleColumns.map(column => csvValue(row, column.id)))
+        ]
+        return csvData
+    }
+
 
     /*  Rendering  */
 
@@ -265,8 +302,17 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     />
                     <ToggleColumnButton
                         columns={columns}
+                        toggledColumns={toggledColumns}
                         onToggleColumnVisible={handleToggleColumnVisible}
                     />
+                    <Tooltip title={"Save to CSV"} placement={"top"}>
+                        <CSVLink data={generateCsvData()}
+                                 filename={(!!options.csv && options.csv.filename) || options.title}>
+                            <IconButton>
+                                <SaveIcon/>
+                            </IconButton>
+                        </CSVLink>
+                    </Tooltip>
                     <Tooltip title={"Search"} placement={"top"}>
                         <IconButton onClick={handleToggleSearch}>
                             <SearchIcon/>
@@ -368,13 +414,14 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     'aria-label': 'next page',
                 }}
                 onChangePage={(event, newPage) => setCurrentPage(newPage)}
-                onChangeRowsPerPage={() => {}}
+                onChangeRowsPerPage={() => {
+                }}
             />
         </Paper>
     )
 }
 
-function ToggleColumnButton({columns, onToggleColumnVisible}) {
+function ToggleColumnButton({columns, toggledColumns, onToggleColumnVisible}) {
 
     const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -388,9 +435,11 @@ function ToggleColumnButton({columns, onToggleColumnVisible}) {
 
     return (
         <>
-            <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
-                <ViewColumnIcon/>
-            </IconButton>
+            <Tooltip title={"Toggle Columns"} placement={"top"}>
+                <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
+                    <ViewColumnIcon/>
+                </IconButton>
+            </Tooltip>
             <Menu
                 id="simple-menu"
                 anchorEl={anchorEl}
@@ -406,11 +455,11 @@ function ToggleColumnButton({columns, onToggleColumnVisible}) {
                 >
                     <FormLabel component="legend">Toggle Columns</FormLabel>
                     <FormGroup>
-                        {!!columns && columns.filter(column => !!column.hideable).map((column, columnId) => (
+                        {!!columns && columns.filter(column => !!column.hideable).map(column => (
                             <FormControlLabel
-                                key={columnId}
-                                control={<Checkbox checked={!!column.visible}
-                                                   onChange={() => onToggleColumnVisible(columnId)}/>}
+                                key={column.id}
+                                control={<Checkbox checked={toggledColumns[column.id]}
+                                                   onChange={() => onToggleColumnVisible(column.id)}/>}
                                 label={column.title}
                             />
                         ))}
@@ -437,9 +486,11 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
 
     return (
         <>
-            <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
-                <FilterListIcon/>
-            </IconButton>
+            <Tooltip title={"Filter"} placement={"top"}>
+                <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
+                    <FilterListIcon/>
+                </IconButton>
+            </Tooltip>
             <Menu
                 id="simple-menu"
                 anchorEl={anchorEl}

@@ -20,7 +20,7 @@ function App() {
         {
             title: "Name",
             Cell: item => `${item.name.first} ${item.name.last}`,
-            Footer: () => "Average"
+            visible: false,
         },
         {
             title: "Company",
@@ -29,16 +29,19 @@ function App() {
         {
             title: "Age",
             accessor: "age",
+            align: "right",
             Footer: data => data.reduce((acc, cur) => acc + cur.age, 0) / data.length
         },
         {
             title: "Phone",
             accessor: "phone",
+            align: "right",
             sortValue: item => parseInt(item.phone.replace(/[^0-9]+/g, ""))
         },
         {
             title: "Balance",
             accessor: "balance",
+            align: "right",
             sortValue: item => parseFloat(item.balance.replace(/[^0-9.-]+/g, "")),
             Footer: data =>
                 `$${(
@@ -51,15 +54,22 @@ function App() {
         },
         {
             title: "Picture",
-            Cell: item => (
-                <img src={item.picture} style={{ width: 32, height: 32 }} />
+            Cell: row => (
+                <img src={row.picture} style={{ width: 32, height: 32 }} />
             ),
-            visible: false
+            visible: false,
+            shrink: true,
+            csv: {
+                value: row => row.picture
+            }
         }
     ];
     const [options, setOptions] = useState({
         fillEmptyRows: false,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        csv: {
+            filename: "my_table_export",
+        },
     });
     const [filters, setFilters] = useState([]);
     const [sorts, setSorts] = useState([]);
