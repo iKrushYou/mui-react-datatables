@@ -23,6 +23,7 @@ import Checkbox from "@material-ui/core/Checkbox";
 import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
+import TablePagination from "@material-ui/core/TablePagination";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -34,10 +35,10 @@ const useStyles = makeStyles(theme => ({
         minWidth: 650,
     },
     sortIndicatorDesc: {
-        position: "absolute", backgroundColor: "#3498db", top: 0, left: 0, right: 0, height: 4,
+        position: "absolute", backgroundColor: "#3498db", top: 0, left: 0, right: 0, height: 3,
     },
     sortIndicatorAsc: {
-        position: "absolute", backgroundColor: "#3498db", bottom: 0, left: 0, right: 0, height: 4,
+        position: "absolute", backgroundColor: "#3498db", bottom: 0, left: 0, right: 0, height: 3,
     }
 }));
 
@@ -174,6 +175,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
 
             return [...prev]
         })
+        setCurrentPage(0)
     }
 
     const removeFilter = (filterId) => {
@@ -214,6 +216,15 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     filtersRef(filters)
     sortsRef(sorts)
 
+
+
+    /*  Pagination  */
+
+    const [currentPage, setCurrentPage] = useState(0)
+
+    const pageData = data.slice(currentPage * options.rowsPerPage, (currentPage + 1) * options.rowsPerPage )
+
+    const emptyRows = new Array(Math.max(0, options.rowsPerPage - pageData.length)).fill(0)
 
     /*  Rendering  */
 
@@ -315,7 +326,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {!!data && data.map((item, itemIndex) => (
+                    {!!pageData && pageData.map((item, itemIndex) => (
                         <TableRow key={itemIndex}>
                             {!!visibleColumns && visibleColumns.map((column) => (
                                 <TableCell key={column.id} align={column.align}>
@@ -324,12 +335,10 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                             ))}
                         </TableRow>
                     ))}
-                    {!!data
-                    && options.fillEmptyRows
-                    && new Array(Math.max(0, options.rowsPerPage - data.length)).fill(0).map((x, i) => (
+                    {options.fillEmptyRows && emptyRows.map((x, i) => (
                         <TableRow key={i}>
                             <TableCell colSpan={'100%'}
-                                       style={{borderWidth: i === options.rowsPerPage - data.length - 1 ? null : 0}}>&nbsp;</TableCell>
+                                       style={{borderWidth: i === options.rowsPerPage - pageData.length - 1 ? null : 0}}>&nbsp;</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -346,6 +355,21 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     </TableRow>
                 </TableFooter>
             </Table>
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={data.length}
+                rowsPerPage={options.rowsPerPage}
+                page={currentPage}
+                backIconButtonProps={{
+                    'aria-label': 'previous page',
+                }}
+                nextIconButtonProps={{
+                    'aria-label': 'next page',
+                }}
+                onChangePage={(event, newPage) => setCurrentPage(newPage)}
+                onChangeRowsPerPage={() => {}}
+            />
         </Paper>
     )
 }

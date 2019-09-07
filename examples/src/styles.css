@@ -1,3 +1,8 @@
-body, html {
+body,
+html {
     background-color: gainsboro;
+}
+
+.App {
+    margin: 64px
 }
