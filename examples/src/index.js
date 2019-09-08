@@ -64,7 +64,7 @@ function App() {
             {columnId: 'name', direction: "asc"},
         ],
         initialFilters: [
-            {columnId: 'name', value: "se"},
+            {columnId: 'name', value: "se", type: "exact"},
         ],
     });
     const [filters, setFilters] = useState([]);

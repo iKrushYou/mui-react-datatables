@@ -204,11 +204,11 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
         setFilters([...options.initialFilters])
     }, [options.initialFilters])
 
-    const addFilter = (value, columnId = -1) => {
+    const addFilter = (value, columnId = -1, type = "default") => {
         setFilters(prev => {
             prev = prev.filter(x => x.columnId !== columnId)
 
-            if (!!value && value !== "") prev.push({value, columnId})
+            if (!!value && value !== "") prev.push({value, columnId, type})
 
             return [...prev]
         })
@@ -222,6 +222,11 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
         })
     }
 
+    const filterFn = (data, filter) => {
+        if (filter.type === "exact") return data.filter(x => String(colValue(x, filter.columnId)) === String(filter.value))
+        return data.filter(x => String(colValue(x, filter.columnId)).toLowerCase().includes(String(filter.value).toLowerCase()))
+    }
+
     filters.forEach(filter => {
         if (filter.columnId === -1) {
             data = data.filter(row =>
@@ -230,7 +235,7 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                         , false)
             )
         } else {
-            data = data.filter(x => String(colValue(x, filter.columnId)).toLowerCase().includes(String(filter.value).toLowerCase()))
+            data = filterFn(data, filter)
         }
     })
 
@@ -532,7 +537,7 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
                                     <InputLabel>{column.title}</InputLabel>
                                     <Select
                                         value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
-                                        onChange={event => onSetFilter(event.target.value, column.id)}
+                                        onChange={event => onSetFilter(event.target.value, column.id, "exact")}
                                     >
                                         <MenuItem value={""}>All</MenuItem>
                                         {[...new Set(data.map(item => colValue(item, column.id)))].map(option => (
