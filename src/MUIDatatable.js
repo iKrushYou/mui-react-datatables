@@ -6,7 +6,6 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
 import TableBody from "@material-ui/core/TableBody";
-import ButtonBase from "@material-ui/core/ButtonBase";
 import Chip from "@material-ui/core/Chip";
 import TextField from "@material-ui/core/TextField";
 import IconButton from "@material-ui/core/IconButton";
@@ -26,8 +25,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import TablePagination from "@material-ui/core/TablePagination";
 import {CSVLink} from "react-csv";
-import NativeSelect from "@material-ui/core/NativeSelect";
-import Input from "@material-ui/core/Input";
+import TableHeadButton from "./components/TableHeadButton";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -37,12 +35,6 @@ const useStyles = makeStyles(theme => ({
     table: {
         minWidth: 650,
     },
-    sortIndicatorAsc: {
-        position: "absolute", backgroundColor: "#3498db", top: 0, left: 0, right: 0, height: 3,
-    },
-    sortIndicatorDesc: {
-        position: "absolute", backgroundColor: "#3498db", bottom: 0, left: 0, right: 0, height: 3,
-    }
 }));
 
 const defaultOptions = {
@@ -141,16 +133,17 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
         addSort(columnId, direction, !event.shiftKey)
     }
 
-    const colValue = (item, columnId) => {
+    const colValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (!!c.accessor && item[c.accessor])
-            || c.Cell(item)
+        return (typeof c.Cell === "function" && c.Cell(row))
+            || row[c.accessor]
     }
 
-    const sortValue = (item, columnId) => {
+    const sortValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.sortValue === "function" && c.sortValue(item))
-            || colValue(item, columnId)
+        return (typeof c.sortValue === "function" && c.sortValue(row))
+            || row[c.accessor]
+            || colValue(row, columnId)
     }
 
     const compareItems = (a, b, sortColumn) => {
@@ -161,8 +154,8 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
             return getColumn(sortColumn.columnId).sort(a, b, sortColumn.direction)
         } else if (typeof aValue === "number") {
             return sortColumn.direction === 'desc'
-                ? aValue - bValue
-                : bValue - aValue
+                ? bValue - aValue
+                : aValue - bValue
         } else {
             return sortColumn.direction === 'desc'
                 ? String(bValue).localeCompare(aValue)
@@ -225,10 +218,11 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
         })
     }
 
-    const filterValue = (item, columnId) => {
+    const filterValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.filterValue === "function" && c.filterValue(item))
-            || colValue(item, columnId)
+        return (typeof c.filterValue === "function" && c.filterValue(row))
+            || row[c.accessor]
+            || colValue(row, columnId)
     }
 
     const filterFn = (data, filter) => {
@@ -284,10 +278,11 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     /*  CSV Download  */
 
-    const csvValue = (item, columnId) => {
+    const csvValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (!!c.csv && typeof c.csvValue === "function" && c.csvValue(item))
-            || colValue(item, columnId)
+        return (typeof c.csvValue === "function" && c.csvValue(row))
+            || row[c.accessor]
+            || colValue(row, columnId)
     }
 
     const generateCsvData = () => {
@@ -319,9 +314,9 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                     {buttons}
                     <FilterColumnButton
                         filters={filters}
-                        columns={columns}
+                        columns={visibleColumns}
                         data={data}
-                        colValue={colValue}
+                        filterValue={filterValue}
                         onSetFilter={addFilter}
                     />
                     <ToggleColumnButton
@@ -346,41 +341,13 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                     </Tooltip>
                 </div>
             </div>
-            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns} />
+            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
             <Table className={classes.table}>
                 <TableHead>
                     <TableRow>
-                        {!!visibleColumns && visibleColumns.map((column) => {
-                                const columnSort = sorts.find(x => x.columnId === column.id)
-                                const sortClass = !!columnSort
-                                    ? columnSort.direction === 'asc'
-                                        ? classes.sortIndicatorAsc
-                                        : classes.sortIndicatorDesc
-                                    : null
-                                return (
-                                    <TableCell key={column.id} {...column.props}
-                                               style={{
-                                                   width: !!column.shrink ? 1 : null,
-                                                   position: "relative",
-                                                   padding: 0
-                                               }}
-                                    >
-                                        <ButtonBase
-                                            style={{
-                                                display: "table-cell",
-                                                width: '100%',
-                                                padding: '14px 40px 14px 16px',
-                                                textAlign: column.align || 'left'
-                                            }}
-                                            disabled={!column.sortable}
-                                            onClick={(event) => sortColumn(event, column.id)}
-                                        >
-                                            {column.title || <span>&nbsp;</span>}
-                                            <div className={sortClass}/>
-                                        </ButtonBase>
-                                    </TableCell>
-                                )
-                            }
+                        {!!visibleColumns && visibleColumns.map((column) => (
+                                <TableHeadButton column={column} onSortColumn={sortColumn} sorts={sorts}/>
+                            )
                         )}
                     </TableRow>
                 </TableHead>
@@ -388,7 +355,8 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                     {!!pageData && pageData.map((item, itemIndex) => (
                         <TableRow key={itemIndex}>
                             {!!visibleColumns && visibleColumns.map((column) => (
-                                <TableCell key={column.id} align={column.align}>
+                                <TableCell key={column.id} align={column.align}
+                                >
                                     {colValue(item, column.id)}
                                 </TableCell>
                             ))}
@@ -514,7 +482,7 @@ function ToggleColumnButton({columns, toggledColumns, onToggleColumnVisible}) {
 }
 
 
-function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
+function FilterColumnButton({filters, columns, data, filterValue, onSetFilter}) {
 
     const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -545,56 +513,18 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
                 onClose={handleClose}
             >
                 <div
-                    style={{margin: 16, minWidth: 200}}
+                    style={{margin: 16, minWidth: 200, maxWidth: 500}}
                 >
                     <Grid container spacing={2}>
                         {!!columns && columns.filter(column => !!column.filterable).map(column => (
                             <Grid key={column.id} item xs={12} md={6}>
                                 {column.filterType === "text" ? (
-                                    <FormControl fullWidth>
-                                        <TextField
-                                            label={column.title}
-                                            value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
-                                            onChange={event => onSetFilter(event.target.value, column.id, "default")}
-                                        />
-                                    </FormControl>
+                                    <TextFilter filters={filters} column={column} onSetFilter={onSetFilter}/>
                                 ) : column.filterType === "numeric" ? (
-                                    <div style={{ display: "flex" }}>
-                                        <FormControl style={{ flex: -1 }}>
-                                            <InputLabel />
-                                            <NativeSelect
-                                                defaultValue={"eq"}
-                                                input={<Input name="name" id="uncontrolled-native" />}
-                                                innerRef={comparisonRef}
-                                            >
-                                                <option value={"lt"}>&lt;</option>
-                                                <option value={"le"}>&le;</option>
-                                                <option value={"eq"}>=</option>
-                                                <option value={"gt"}>&gt;</option>
-                                                <option value={"ge"}>&ge;</option>
-                                            </NativeSelect>
-                                        </FormControl>
-                                        <FormControl style={{ flex: 1 }}>
-                                            <TextField
-                                                label={column.title}
-                                                value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
-                                                onChange={event => onSetFilter(event.target.value, column.id, comparisonRef.current.value)}
-                                            />
-                                        </FormControl>
-                                    </div>
+                                    <NumericFilter filters={filters} column={column} onSetFilter={onSetFilter}/>
                                 ) : (
-                                    <FormControl fullWidth>
-                                        <InputLabel>{column.title}</InputLabel>
-                                        <Select
-                                            value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
-                                            onChange={event => onSetFilter(event.target.value, column.id, "exact")}
-                                        >
-                                            <MenuItem value={""}>All</MenuItem>
-                                            {[...new Set(data.map(item => colValue(item, column.id)))].map(option => (
-                                                <MenuItem key={option} value={option}>{option}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
+                                    <SelectFilter filters={filters} on onSetFilter={onSetFilter} column={column}
+                                                  data={data} filterValue={filterValue}/>
                                 )}
                             </Grid>
                         ))}
@@ -606,7 +536,81 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
     )
 }
 
-const FiltersSummary = ({filters, columns, getColumn, onRemoveFilter}) => (
+function TextFilter({filters, column, onSetFilter}) {
+    return (
+        <FormControl fullWidth>
+            <TextField
+                label={column.title}
+                value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
+                onChange={event => onSetFilter(event.target.value, column.id, "default")}
+            />
+        </FormControl>
+    )
+}
+
+function NumericFilter({filters, column, onSetFilter}) {
+
+    const [comparison, setComparison] = useState((filters.find(x => x.columnId === column.id) || {}).type || "eq")
+    const [value, setValue] = useState((filters.find(x => x.columnId === column.id) || {}).value || "")
+
+    useEffect(() => {
+        onSetFilter(value, column.id, comparison)
+    }, [value, column.id, comparison])
+
+    return (
+        <div style={{display: "flex"}}>
+            <FormControl style={{flex: -1}}>
+                <InputLabel/>
+                <Select
+                    style={{flex: -1}}
+                    value={comparison}
+                    onChange={event => setComparison(event.target.value)}
+                >
+                    <MenuItem value={"lt"}>&lt;</MenuItem>
+                    <MenuItem value={"lte"}>&le;</MenuItem>
+                    <MenuItem value={"eq"}>=</MenuItem>
+                    <MenuItem value={"gt"}>&gt;</MenuItem>
+                    <MenuItem value={"gte"}>&ge;</MenuItem>
+                </Select>
+            </FormControl>
+            <FormControl style={{flex: 1}}>
+                <TextField
+                    label={column.title}
+                    value={value}
+                    onChange={event => setValue(event.target.value)}
+                />
+            </FormControl>
+        </div>
+    )
+}
+
+function SelectFilter({filters, onSetFilter, column, data, filterValue}) {
+
+    const rowSet = data.reduce((acc, row) => {
+        const value = filterValue(row, column.id)
+        acc[value] = row
+        return acc
+    }, {})
+
+    return (
+        <FormControl fullWidth>
+            <InputLabel>{column.title}</InputLabel>
+            <Select
+                value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
+                onChange={event => onSetFilter(event.target.value, column.id, "exact")}
+            >
+                <MenuItem value={""}>All</MenuItem>
+                {Object.keys(rowSet).map(value => (
+                    <MenuItem key={value} value={value}>
+                        {typeof column.filterMenuItem === "function" ? column.filterMenuItem(rowSet[value]) : value}
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+    )
+}
+
+const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
     <Collapse in={!!filters && filters.length > 0}>
         <div style={{display: "flex", margin: 16}}>
             <Typography style={{marginRight: 16}}>Filters:</Typography>

@@ -24,14 +24,21 @@ function App() {
             title: "Age",
             accessor: "age",
             align: "right",
-            Footer: data => data.reduce((acc, cur) => acc + cur.age, 0) / data.length,
+            Footer: data => `Avg: ${(data.reduce((acc, cur) => acc + cur.age, 0) / data.length).toFixed(2)}`,
             filterType: "numeric",
+        },
+        {
+            title: "Eye Color",
+            accessor: "eyeColor",
+            Cell: row => <div style={{width: 16, height: 16, borderRadius: 4, backgroundColor: row.eyeColor}} />,
+            shrink: true,
         },
         {
             title: "Phone",
             accessor: "phone",
             align: "right",
-            sortValue: item => parseInt(item.phone.replace(/[^0-9]+/g, ""))
+            sortValue: item => parseInt(item.phone.replace(/[^0-9]+/g, "")),
+            filterType: "text",
         },
         {
             title: "Balance",
@@ -45,16 +52,16 @@ function App() {
                             acc + parseFloat(cur.balance.replace(/[^0-9.-]+/g, "")),
                         0
                     ) / data.length
-                ).toFixed(2)}`
+                ).toFixed(2)}`,
+            filterType: "numeric",
         },
         {
             title: "Picture",
-            Cell: row => (
-                <img src={row.picture} style={{width: 32, height: 32}}/>
-            ),
-            visible: false,
+            Cell: row => <img src={row.picture} style={{width: 32, height: 32}}/>,
             shrink: true,
             csvValue: row => row.picture,
+            filterValue: row => row.picture,
+            filterMenuItem: row => <img src={row.picture} style={{width: 32, height: 32}}/>
         }
     ];
     const [options, setOptions] = useState({
@@ -67,7 +74,7 @@ function App() {
             {columnId: 'name', direction: "asc"},
         ],
         initialFilters: [
-            {columnId: 'name', value: "se", type: "exact"},
+            // {columnId: 'name', value: "se", type: "exact"},
         ],
     });
     const [filters, setFilters] = useState([]);
