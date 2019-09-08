@@ -184,8 +184,6 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
         }))
     }
 
-    console.log('toggledColumns', toggledColumns)
-
     const visibleColumns = columns.filter(column => toggledColumns[column.id])
 
 
@@ -275,28 +273,14 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     return (
         <Paper className={classes.root}>
             <div style={{display: "flex", margin: 16}}>
-                <div style={{
-                    flex: showSearch ? 2 : 0,
-                    display: 'flex',
-                    overflow: "hidden",
-                    transition: 'flex 0.2s ease-out'
-                }}>
-                    <TextField
-                        inputRef={searchFieldRef}
-                        style={{flex: 1}}
-                        label={"Search"}
-                        value={searchTerm}
-                        onChange={(event) => addFilter(event.target.value)}
-                    />
-                    <IconButton style={{flex: -1}} onClick={() => setShowSearch(false)} color={"secondary"}>
-                        <CloseIcon/>
-                    </IconButton>
-                </div>
-                <Typography variant={"h4"}
-                            style={{flex: showSearch ? 0 : 2, overflow: "hidden", transition: 'flex 0.2s ease-out'}}
-                            noWrap>
-                    {title}
-                </Typography>
+                <TitleSearchBar
+                    title={title}
+                    showSearch={showSearch}
+                    setShowSearch={setShowSearch}
+                    searchFieldRef={searchFieldRef}
+                    searchTerm={searchTerm}
+                    addFilter={addFilter}
+                />
                 <div style={{flex: 1}}/>
                 <div style={{flex: -1, display: 'flex', flexDirection: "row-reverse"}}>
                     {buttons}
@@ -329,20 +313,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     </Tooltip>
                 </div>
             </div>
-            <Collapse in={!!filters && filters.length > 0}>
-                <div style={{display: "flex", margin: 16}}>
-                    <Typography style={{marginRight: 16}}>Filters:</Typography>
-                    <div style={{display: "flex", margin: -4}}>
-                        {filters.map((filter, filterId) => (
-                            <Chip
-                                style={{margin: 4}}
-                                label={`${filter.columnId === -1 ? "" : `${visibleColumns[filter.columnId].title}: `}${filter.value}`}
-                                onDelete={() => removeFilter(filterId)}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </Collapse>
+            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
             <Table className={classes.table}>
                 <TableHead>
                     <TableRow>
@@ -427,6 +398,35 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                 }}
             />
         </Paper>
+    )
+}
+
+function TitleSearchBar({title, showSearch, setShowSearch, searchFieldRef, searchTerm, addFilter}) {
+    return (
+        <>
+            <div style={{
+                flex: showSearch ? 2 : 0,
+                display: 'flex',
+                overflow: "hidden",
+                transition: 'flex 0.2s ease-out'
+            }}>
+                <TextField
+                    inputRef={searchFieldRef}
+                    style={{flex: 1}}
+                    label={"Search"}
+                    value={searchTerm}
+                    onChange={(event) => addFilter(event.target.value)}
+                />
+                <IconButton style={{flex: -1}} onClick={() => setShowSearch(false)} color={"secondary"}>
+                    <CloseIcon/>
+                </IconButton>
+            </div>
+            <Typography variant={"h4"}
+                        style={{flex: showSearch ? 0 : 2, overflow: "hidden", transition: 'flex 0.2s ease-out'}}
+                        noWrap>
+                {title}
+            </Typography>
+        </>
     )
 }
 
@@ -536,3 +536,21 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
         </>
     )
 }
+
+const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
+    <Collapse in={!!filters && filters.length > 0}>
+        <div style={{display: "flex", margin: 16}}>
+            <Typography style={{marginRight: 16}}>Filters:</Typography>
+            <div style={{display: "flex", margin: -4}}>
+                {filters.map((filter, filterId) => (
+                    <Chip
+                        key={filterId}
+                        style={{margin: 4}}
+                        label={`${filter.columnId === -1 ? "" : `${columns[filter.columnId].title}: `}${filter.value}`}
+                        onDelete={() => onRemoveFilter(filterId)}
+                    />
+                ))}
+            </div>
+        </div>
+    </Collapse>
+)
