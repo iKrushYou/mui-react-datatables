@@ -9,15 +9,16 @@ import MUIDatatable from "../../src";
 function App() {
     const columns = [
         {
+            id: 'name',
             title: "Name",
             Cell: item => `${item.name.first} ${item.name.last}`,
-            visible: false,
         },
         {
             title: "Company",
             accessor: "company"
         },
         {
+            id: "age",
             title: "Age",
             accessor: "age",
             align: "right",
@@ -58,6 +59,13 @@ function App() {
         rowsPerPage: 10,
         csvExport: false,
         csvFilename: "my_table_export",
+        initialSorts: [
+            {columnId: 'age', direction: "asc"},
+            {columnId: 'name', direction: "asc"},
+        ],
+        initialFilters: [
+            {columnId: 'name', value: "se"},
+        ],
     });
     const [filters, setFilters] = useState([]);
     const [sorts, setSorts] = useState([]);

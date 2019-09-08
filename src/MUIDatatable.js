@@ -35,10 +35,10 @@ const useStyles = makeStyles(theme => ({
     table: {
         minWidth: 650,
     },
-    sortIndicatorDesc: {
+    sortIndicatorAsc: {
         position: "absolute", backgroundColor: "#3498db", top: 0, left: 0, right: 0, height: 3,
     },
-    sortIndicatorAsc: {
+    sortIndicatorDesc: {
         position: "absolute", backgroundColor: "#3498db", bottom: 0, left: 0, right: 0, height: 3,
     }
 }));
@@ -47,6 +47,8 @@ const defaultOptions = {
     fillEmptyRows: false,
     rowsPerPage: 10,
     csvExport: true,
+    initialSorts: [],
+    initialFilters: [],
 }
 
 const defaultColumnValues = {
@@ -81,13 +83,16 @@ const mapObject = (source, destination) => {
     return {...destination, ...source}
 }
 
-export default function MUIDatatable({data: dataInput, options, columns: columnsInput, title, buttons, filtersRef, sortsRef}) {
+export default function MUIDatatable({data: dataInput, options: optionsInput, columns: columnsInput, title, buttons, filtersRef, sortsRef}) {
 
     const classes = useStyles();
 
-    options = mapObject(options, defaultOptions)
+    const options = useMemo(() => mapObject(optionsInput, defaultOptions), [optionsInput])
 
     const columns = useMemo(() => [...columnsInput.map((column, index) => ({id: index, ...mapObject(column, defaultColumnValues)}))], [columnsInput])
+
+    const getColumn = (columnId) => columns.find(x => x.id === columnId)
+
 
     let data = [...dataInput]
 
@@ -95,6 +100,10 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     /*  Sorting  */
 
     const [sorts, setSorts] = useState([])
+
+    useEffect(() => {
+        setSorts([...options.initialSorts])
+    }, [options.initialSorts])
 
     const addSort = (columnId, direction, clear = false) => {
         setSorts(prev => {
@@ -118,10 +127,10 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     const sortColumn = (event, columnId) => {
         const sortColumn = sorts.find(x => x.columnId === columnId)
 
-        let direction = 'desc'
+        let direction = 'asc'
         if (!!sortColumn) {
-            if (sortColumn.direction === 'desc') {
-                direction = 'asc'
+            if (sortColumn.direction === 'asc') {
+                direction = 'desc'
             } else if (event.shiftKey) {
                 direction = null
             }
@@ -130,13 +139,13 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     }
 
     const colValue = (item, columnId) => {
-        const c = columns[columnId]
+        const c = getColumn(columnId)
         return (!!c.accessor && item[c.accessor])
             || c.Cell(item)
     }
 
     const sortValue = (item, columnId) => {
-        const c = columns[columnId]
+        const c = getColumn(columnId)
         return (typeof c.sortValue === "function" && c.sortValue(item))
             || colValue(item, columnId)
     }
@@ -145,14 +154,14 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
         const aValue = sortValue(a, sortColumn.columnId)
         const bValue = sortValue(b, sortColumn.columnId)
 
-        if (typeof columns[sortColumn.columnId].sort === "function") {
-            return columns[sortColumn.columnId].sort(a, b, sortColumn.direction)
+        if (typeof getColumn(sortColumn.columnId).sort === "function") {
+            return getColumn(sortColumn.columnId).sort(a, b, sortColumn.direction)
         } else if (typeof aValue === "number") {
-            return sortColumn.direction === 'asc'
+            return sortColumn.direction === 'desc'
                 ? aValue - bValue
                 : bValue - aValue
         } else {
-            return sortColumn.direction === 'asc'
+            return sortColumn.direction === 'desc'
                 ? String(bValue).localeCompare(aValue)
                 : String(aValue).localeCompare(bValue)
         }
@@ -190,6 +199,10 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     /*  Search Filtering  */
 
     const [filters, setFilters] = useState([])
+
+    useEffect(() => {
+        setFilters([...options.initialFilters])
+    }, [options.initialFilters])
 
     const addFilter = (value, columnId = -1) => {
         setFilters(prev => {
@@ -252,7 +265,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
     /*  CSV Download  */
 
     const csvValue = (item, columnId) => {
-        const c = columns[columnId]
+        const c = getColumn(columnId)
         return (!!c.csv && typeof c.csvValue === "function" && c.csvValue(item))
             || colValue(item, columnId)
     }
@@ -289,7 +302,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                         columns={columns}
                         data={data}
                         colValue={colValue}
-                        onSetFilter={(value, columnId) => addFilter(value, columnId)}
+                        onSetFilter={addFilter}
                     />
                     <ToggleColumnButton
                         columns={columns}
@@ -313,7 +326,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                     </Tooltip>
                 </div>
             </div>
-            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
+            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns} />
             <Table className={classes.table}>
                 <TableHead>
                     <TableRow>
@@ -513,8 +526,8 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
                     style={{margin: 16, minWidth: 200}}
                 >
                     <Grid container spacing={2}>
-                        {!!columns && columns.filter(column => !!column.filterable).map((column, columnId) => (
-                            <Grid key={columnId} item xs={12} md={6}>
+                        {!!columns && columns.filter(column => !!column.filterable).map(column => (
+                            <Grid key={column.id} item xs={12} md={6}>
                                 <FormControl fullWidth>
                                     <InputLabel>{column.title}</InputLabel>
                                     <Select
@@ -537,7 +550,7 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
     )
 }
 
-const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
+const FiltersSummary = ({filters, columns, getColumn, onRemoveFilter}) => (
     <Collapse in={!!filters && filters.length > 0}>
         <div style={{display: "flex", margin: 16}}>
             <Typography style={{marginRight: 16}}>Filters:</Typography>
@@ -546,7 +559,7 @@ const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
                     <Chip
                         key={filterId}
                         style={{margin: 4}}
-                        label={`${filter.columnId === -1 ? "" : `${columns[filter.columnId].title}: `}${filter.value}`}
+                        label={`${filter.columnId === -1 ? "" : `${columns.find(x => x.id === filter.columnId).title}: `}${filter.value}`}
                         onDelete={() => onRemoveFilter(filterId)}
                     />
                 ))}

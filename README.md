@@ -97,11 +97,14 @@ The component accepts the following props:
 |**`rowsPerPage`**|number|`10`|false|Number of rows displayed on a page.
 |**`csvExport`**|boolean|`true`|false|Display CSV export button.
 |**`csvFilename`**|string|`title` &#124;&#124; `"table"`|false|Filename for CSV export.
+|**`initialSorts`**|[object]|`[]`|false|Initial sorting list.
+|**`initialFilters`**|[object]|`[]`|false|Initial filtering list.
 
 
 #### <a name="columns-field"></a>columns[]:
 |Name|Type|Default|Required|Description
 |:--:|:-----|:--|:-----|:-----|
+|**`id`**|string|index|false|Unique identifier. Used for reference in `initialSorts` and `initialFilters`
 |**`title`**|string||true|Title of the column
 |**`accessor`**|string||true*|Key of value in row to display.<br />*not required if using `Cell`
 |**`Cell`**|function||false|Render function of the cell. Overridden by `accessor` <br/>`(row) => {}`
