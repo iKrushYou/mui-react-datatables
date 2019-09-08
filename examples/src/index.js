@@ -12,17 +12,20 @@ function App() {
             id: 'name',
             title: "Name",
             Cell: item => `${item.name.first} ${item.name.last}`,
+            filterType: "text",
         },
         {
             title: "Company",
-            accessor: "company"
+            accessor: "company",
+            filterType: "text",
         },
         {
             id: "age",
             title: "Age",
             accessor: "age",
             align: "right",
-            Footer: data => data.reduce((acc, cur) => acc + cur.age, 0) / data.length
+            Footer: data => data.reduce((acc, cur) => acc + cur.age, 0) / data.length,
+            filterType: "numeric",
         },
         {
             title: "Phone",

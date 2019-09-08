@@ -26,6 +26,8 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import TablePagination from "@material-ui/core/TablePagination";
 import {CSVLink} from "react-csv";
+import NativeSelect from "@material-ui/core/NativeSelect";
+import Input from "@material-ui/core/Input";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -56,6 +58,7 @@ const defaultColumnValues = {
     sortable: true,
     hideable: true,
     filterable: true,
+    filterMatch: "exact",
 }
 
 MUIDatatable.defaultProps = {
@@ -222,9 +225,21 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
         })
     }
 
+    const filterValue = (item, columnId) => {
+        const c = getColumn(columnId)
+        return (typeof c.filterValue === "function" && c.filterValue(item))
+            || colValue(item, columnId)
+    }
+
     const filterFn = (data, filter) => {
-        if (filter.type === "exact") return data.filter(x => String(colValue(x, filter.columnId)) === String(filter.value))
-        return data.filter(x => String(colValue(x, filter.columnId)).toLowerCase().includes(String(filter.value).toLowerCase()))
+        if (filter.value == null || filter.value === "") return data
+
+        if (filter.type === "exact") return data.filter(x => String(filterValue(x, filter.columnId)) === String(filter.value))
+        if (filter.type === "lt") return data.filter(x => filterValue(x, filter.columnId) < filter.value)
+        if (filter.type === "lte") return data.filter(x => filterValue(x, filter.columnId) <= filter.value)
+        if (filter.type === "gt") return data.filter(x => filterValue(x, filter.columnId) > filter.value)
+        if (filter.type === "gte") return data.filter(x => filterValue(x, filter.columnId) >= filter.value)
+        return data.filter(x => String(filterValue(x, filter.columnId)).toLowerCase().includes(String(filter.value).toLowerCase()))
     }
 
     filters.forEach(filter => {
@@ -511,6 +526,8 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
         setAnchorEl(null);
     }
 
+    const comparisonRef = useRef()
+
     return (
         <>
             <Tooltip title={"Filter"} placement={"top"}>
@@ -533,18 +550,52 @@ function FilterColumnButton({filters, columns, data, colValue, onSetFilter}) {
                     <Grid container spacing={2}>
                         {!!columns && columns.filter(column => !!column.filterable).map(column => (
                             <Grid key={column.id} item xs={12} md={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>{column.title}</InputLabel>
-                                    <Select
-                                        value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
-                                        onChange={event => onSetFilter(event.target.value, column.id, "exact")}
-                                    >
-                                        <MenuItem value={""}>All</MenuItem>
-                                        {[...new Set(data.map(item => colValue(item, column.id)))].map(option => (
-                                            <MenuItem key={option} value={option}>{option}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                {column.filterType === "text" ? (
+                                    <FormControl fullWidth>
+                                        <TextField
+                                            label={column.title}
+                                            value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
+                                            onChange={event => onSetFilter(event.target.value, column.id, "default")}
+                                        />
+                                    </FormControl>
+                                ) : column.filterType === "numeric" ? (
+                                    <div style={{ display: "flex" }}>
+                                        <FormControl style={{ flex: -1 }}>
+                                            <InputLabel />
+                                            <NativeSelect
+                                                defaultValue={"eq"}
+                                                input={<Input name="name" id="uncontrolled-native" />}
+                                                innerRef={comparisonRef}
+                                            >
+                                                <option value={"lt"}>&lt;</option>
+                                                <option value={"le"}>&le;</option>
+                                                <option value={"eq"}>=</option>
+                                                <option value={"gt"}>&gt;</option>
+                                                <option value={"ge"}>&ge;</option>
+                                            </NativeSelect>
+                                        </FormControl>
+                                        <FormControl style={{ flex: 1 }}>
+                                            <TextField
+                                                label={column.title}
+                                                value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
+                                                onChange={event => onSetFilter(event.target.value, column.id, comparisonRef.current.value)}
+                                            />
+                                        </FormControl>
+                                    </div>
+                                ) : (
+                                    <FormControl fullWidth>
+                                        <InputLabel>{column.title}</InputLabel>
+                                        <Select
+                                            value={(filters.find(x => x.columnId === column.id) || {}).value || ""}
+                                            onChange={event => onSetFilter(event.target.value, column.id, "exact")}
+                                        >
+                                            <MenuItem value={""}>All</MenuItem>
+                                            {[...new Set(data.map(item => colValue(item, column.id)))].map(option => (
+                                                <MenuItem key={option} value={option}>{option}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
                             </Grid>
                         ))}
                     </Grid>
