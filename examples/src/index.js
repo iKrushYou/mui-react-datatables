@@ -1,16 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, {useState} from "react";
 import ReactDOM from "react-dom";
 import data from "./data.json";
-import {
-    Divider,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    Switch,
-    FormControlLabel,
-    TextField
-} from "@material-ui/core";
+import {Card, CardContent, Divider, FormControlLabel, Grid, Switch, TextField, Typography} from "@material-ui/core";
 
 import "./styles.css";
 import MUIDatatable from "../../src";
@@ -55,21 +46,18 @@ function App() {
         {
             title: "Picture",
             Cell: row => (
-                <img src={row.picture} style={{ width: 32, height: 32 }} />
+                <img src={row.picture} style={{width: 32, height: 32}}/>
             ),
             visible: false,
             shrink: true,
-            csv: {
-                value: row => row.picture
-            }
+            csvValue: row => row.picture,
         }
     ];
     const [options, setOptions] = useState({
         fillEmptyRows: false,
         rowsPerPage: 10,
-        csv: {
-            filename: "my_table_export",
-        },
+        csvExport: false,
+        csvFilename: "my_table_export",
     });
     const [filters, setFilters] = useState([]);
     const [sorts, setSorts] = useState([]);
@@ -91,9 +79,8 @@ function App() {
 
                                         if (typeof optionValue === "boolean") {
                                             return (
-                                                <Grid item xs={12} sm={6}>
+                                                <Grid key={optionKey} item xs={12} sm={6}>
                                                     <FormControlLabel
-                                                        fullWidth
                                                         control={
                                                             <Switch
                                                                 checked={optionValue}
@@ -112,7 +99,7 @@ function App() {
                                             );
                                         } else if (typeof optionValue === "number") {
                                             return (
-                                                <Grid item xs={12} sm={6}>
+                                                <Grid key={optionKey} item xs={12} sm={6}>
                                                     <TextField
                                                         fullWidth
                                                         label={optionKey}
@@ -128,14 +115,16 @@ function App() {
                                                 </Grid>
                                             );
                                         } else {
-                                            return <></>;
+                                            return <React.Fragment key={optionKey}/>;
                                         }
                                     })}
                                 </Grid>
-                                <Typography>options</Typography>
-                                <pre>{JSON.stringify(options, null, 2)}</pre>
+                                <pre style={{marginTop: 32}}>{JSON.stringify(options, null, 2)}</pre>
                             </CardContent>
                         </Card>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Divider/>
                     </Grid>
                     <Grid item xs={12}>
                         <MUIDatatable
@@ -148,7 +137,7 @@ function App() {
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <Divider />
+                        <Divider/>
                     </Grid>
                     <Grid item xs={12}>
                         <Card>
@@ -173,4 +162,4 @@ function App() {
 }
 
 const rootElement = document.getElementById("root");
-ReactDOM.render(<App />, rootElement);
+ReactDOM.render(<App/>, rootElement);

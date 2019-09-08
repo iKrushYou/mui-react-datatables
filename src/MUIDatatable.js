@@ -30,7 +30,6 @@ import {CSVLink} from "react-csv";
 const useStyles = makeStyles(theme => ({
     root: {
         width: '100%',
-        marginTop: theme.spacing(3),
         overflowX: 'auto',
     },
     table: {
@@ -47,6 +46,7 @@ const useStyles = makeStyles(theme => ({
 const defaultOptions = {
     fillEmptyRows: false,
     rowsPerPage: 10,
+    csvExport: true,
 }
 
 const defaultColumnValues = {
@@ -68,19 +68,26 @@ MUIDatatable.defaultProps = {
     },
 }
 
+const mapObject = (source, destination) => {
+
+    if (source == null) {
+        return destination
+    }
+
+    if (destination == null) {
+        return source
+    }
+
+    return {...destination, ...source}
+}
+
 export default function MUIDatatable({data: dataInput, options, columns: columnsInput, title, buttons, filtersRef, sortsRef}) {
 
     const classes = useStyles();
 
-    options = {...defaultOptions, ...options}
+    options = mapObject(options, defaultOptions)
 
-    // const [columns, setColumns] = useState([])
-    // useEffect(() => {
-    //     console.log('setting columns')
-    //     setColumns([...columnsInput.map((column, index) => ({id: index, ...defaultColumnValues, ...column}))]) // enforce default values
-    // }, [columnsInput])
-
-    const columns = useMemo(() => [...columnsInput.map((column, index) => ({id: index, ...defaultColumnValues, ...column}))], [columnsInput])
+    const columns = useMemo(() => [...columnsInput.map((column, index) => ({id: index, ...mapObject(column, defaultColumnValues)}))], [columnsInput])
 
     let data = [...dataInput]
 
@@ -151,7 +158,7 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
         }
     }
 
-    sorts.reverse().forEach(sortColumn => {
+    sorts.slice().reverse().forEach(sortColumn => {
         data.sort((a, b) => compareItems(a, b, sortColumn))
     })
 
@@ -248,13 +255,13 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
 
     const csvValue = (item, columnId) => {
         const c = columns[columnId]
-        return (!!c.csv && typeof c.csv.value === "function" && c.csv.value(item))
+        return (!!c.csv && typeof c.csvValue === "function" && c.csvValue(item))
             || colValue(item, columnId)
     }
 
     const generateCsvData = () => {
         if (!data) return [[]]
-        const headers = visibleColumns.map(column => (!!column.csv && column.csv.header) || column.title)
+        const headers = visibleColumns.map(column => column.csvHeader || column.title)
         const csvData = [
             headers,
             ...data.map(row => visibleColumns.map(column => csvValue(row, column.id)))
@@ -305,14 +312,16 @@ export default function MUIDatatable({data: dataInput, options, columns: columns
                         toggledColumns={toggledColumns}
                         onToggleColumnVisible={handleToggleColumnVisible}
                     />
-                    <Tooltip title={"Save to CSV"} placement={"top"}>
-                        <CSVLink data={generateCsvData()}
-                                 filename={(!!options.csv && options.csv.filename) || options.title}>
-                            <IconButton>
-                                <SaveIcon/>
-                            </IconButton>
-                        </CSVLink>
-                    </Tooltip>
+                    {options.csvExport && (
+                        <Tooltip title={"Save to CSV"} placement={"top"}>
+                            <CSVLink data={generateCsvData()}
+                                     filename={options.csvFilename || title || "table"}>
+                                <IconButton>
+                                    <SaveIcon/>
+                                </IconButton>
+                            </CSVLink>
+                        </Tooltip>
+                    )}
                     <Tooltip title={"Search"} placement={"top"}>
                         <IconButton onClick={handleToggleSearch}>
                             <SearchIcon/>

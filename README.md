@@ -94,7 +94,9 @@ The component accepts the following props:
 |Name|Type|Default|Required|Description
 |:--:|:-----|:--|:-----|:-----|
 |**`fillEmptyRows`**|bool|`false`|false|Should the table fill empty rows with blanks.
-|**`rowsPerPage`**|number|`10`|false|INumber of rows displayed on a page.
+|**`rowsPerPage`**|number|`10`|false|Number of rows displayed on a page.
+|**`csvExport`**|boolean|`true`|false|Display CSV export button.
+|**`csvFilename`**|string|`title` &#124;&#124; `"table"`|false|Filename for CSV export.
 
 
 #### <a name="columns-field"></a>columns[]:
@@ -108,5 +110,7 @@ The component accepts the following props:
 |**`hideable`**|bool|`true`|false|Can the column be hidden / unhidden
 |**`sortable`**|bool|`true`|false|Can this column be sorted using column headers.
 |**`filterable`**|bool|`true`|false|Can this column be filtered / searched on. Applies to both column filters and global search.
+|**`csvHeader`**|string|`title`|false|Header for the column.
+|**`csvValue`**|string||false|Value to be exported for cell. Default is what renders to the table.
 
 
