@@ -107,12 +107,15 @@ The component accepts the following props:
 |**`id`**|string|index|false|Unique identifier. Used for reference in `initialSorts` and `initialFilters`
 |**`title`**|string||true|Title of the column
 |**`accessor`**|string||true*|Key of value in row to display.<br />*not required if using `Cell`
-|**`Cell`**|function||false|Render function of the cell. Overridden by `accessor` <br/>`(row) => {}`
-|**`sortValue`**|bool||false|Custom sort value. Defaults to what is rendered in the cell. <br />`(row) => {}`
-|**`visible`**|bool|`true`|false|Is the column visible by default. User can unhide if `hideable` is set to `true`
-|**`hideable`**|bool|`true`|false|Can the column be hidden / unhidden
+|**`Cell`**|function||false|Render function of the cell. Overrides `accessor` <br/>`(row) => {}`
+|**`Footer`**|function||false|Render function of the cell footer. <br/>`(data) => {}`
 |**`sortable`**|bool|`true`|false|Can this column be sorted using column headers.
+|**`sortValue`**|function||false|Custom sort value. Defaults to `accessor` then `Cell`. <br />`(row) => {}`
 |**`filterable`**|bool|`true`|false|Can this column be filtered / searched on. Applies to both column filters and global search.
+|**`filterValue`**|function||false|Custom filter value. Defaults to `accessor` then `Cell`. <br />`(row) => {}`
+|**`filterType`**|string|`select`|false|`select`: dropdown based on available values<br />`text`: free textfield input<br />`numeric`: comparison operations + numeric input
+|**`hideable`**|bool|`true`|false|Can the column be hidden / unhidden
+|**`visible`**|bool|`true`|false|Is the column visible by default. User can unhide if `hideable` is set to `true`
 |**`csvHeader`**|string|`title`|false|Header for the column.
 |**`csvValue`**|string||false|Value to be exported for cell. Default is what renders to the table.
 
