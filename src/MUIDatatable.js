@@ -575,6 +575,7 @@ function NumericFilter({filters, column, onSetFilter}) {
             </FormControl>
             <FormControl style={{flex: 1}}>
                 <TextField
+                    type="number"
                     label={column.title}
                     value={value}
                     onChange={event => setValue(event.target.value)}
