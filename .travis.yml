@@ -11,15 +11,15 @@ deploy:
     email: "$NPM_EMAIL"
     api_key: "$NPM_TOKEN"
     skip_cleanup: true
-    tag: dev
+    tag: latest
     on:
-      branch: development
+      branch: master
       tags: true
   - provider: npm
     email: "$NPM_EMAIL"
     api_key: "$NPM_TOKEN"
     skip_cleanup: true
-    tag: latest
+    tag: dev
     on:
-      branch: master
+      branch: development
       tags: true
