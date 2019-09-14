@@ -26,15 +26,31 @@ import MenuItem from "@material-ui/core/MenuItem";
 import TablePagination from "@material-ui/core/TablePagination";
 import {CSVLink} from "react-csv";
 import TableHeadButton from "./components/TableHeadButton";
+import MUITableRow from "./components/MUITableRow";
 
 const useStyles = makeStyles(theme => ({
     root: {
         width: '100%',
-        overflowX: 'auto',
+        overflow: "hide",
+    },
+    tableContainer: {
+        overflowX: 'scroll',
     },
     table: {
-        minWidth: 650,
+        // minWidth: 650,
     },
+    tableRowClick: {
+        '&:hover': {
+            cursor: "pointer",
+            backgroundColor: '#eaeaea',
+        },
+        '&:active': {
+            backgroundColor: '#dadada',
+        }
+    },
+    tableCellNoWrap: {
+        whiteSpace: "nowrap"
+    }
 }));
 
 const defaultOptions = {
@@ -43,6 +59,8 @@ const defaultOptions = {
     csvExport: true,
     initialSorts: [],
     initialFilters: [],
+    onRowClick: null,
+    maxRowHeight: null,
 }
 
 const defaultColumnValues = {
@@ -51,6 +69,14 @@ const defaultColumnValues = {
     hideable: true,
     filterable: true,
     filterMatch: "exact",
+    noWrap: true,
+    minWidth: 0,
+    padding: {
+        top: 14,
+        right: 40,
+        bottom: 14,
+        left: 16,
+    },
 }
 
 MUIDatatable.defaultProps = {
@@ -84,7 +110,30 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     const options = useMemo(() => mapObject(optionsInput, defaultOptions), [optionsInput])
 
-    const columns = useMemo(() => [...columnsInput.map((column, index) => ({id: index, ...mapObject(column, defaultColumnValues)}))], [columnsInput])
+    const [rowsPerPage, setRowsPerPage] = useState(defaultOptions.rowsPerPage)
+
+    useEffect(() => {
+        setRowsPerPage(options.rowsPerPage)
+    }, [options.rowsPerPage])
+
+    const columns = useMemo(() => {
+        columnsInput.forEach(column => {
+            if (typeof column.padding === "number") {
+                column.padding = {
+                    top: column.padding,
+                    right: column.padding,
+                    bottom: column.padding,
+                    left: column.padding
+                }
+            }
+        })
+        return [...columnsInput.map((column, index) => ({
+            id: index,
+            ...mapObject(column, defaultColumnValues),
+        }))]
+    }, [columnsInput])
+
+    console.log('columns', columns)
 
     const getColumn = (columnId) => columns.find(x => x.id === columnId)
 
@@ -225,6 +274,12 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
             || colValue(row, columnId)
     }
 
+    const filterMenuItem = (row, columnId) => {
+        const c = getColumn(columnId)
+        return (typeof c.filterMenuItem === "function" && c.filterMenuItem(row))
+            || colValue(row, columnId)
+    }
+
     const filterFn = (data, filter) => {
         if (filter.value == null || filter.value === "") return data
 
@@ -271,9 +326,10 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     const [currentPage, setCurrentPage] = useState(0)
 
-    const pageData = data.slice(currentPage * options.rowsPerPage, (currentPage + 1) * options.rowsPerPage)
+    const pageData = data.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage)
 
-    const emptyRows = new Array(Math.max(0, options.rowsPerPage - pageData.length)).fill(0)
+    console.log('emptyRows', Math.max(0, rowsPerPage - pageData.length))
+    const emptyRows = new Array(Math.max(0, rowsPerPage - pageData.length)).fill(0)
 
 
     /*  CSV Download  */
@@ -293,6 +349,15 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
             ...data.map(row => visibleColumns.map(column => csvValue(row, column.id)))
         ]
         return csvData
+    }
+
+
+    /* Row Click */
+
+    const handleOnRowClick = (event, row) => {
+        if (typeof options.onRowClick === "function") {
+            options.onRowClick(event, row)
+        }
     }
 
 
@@ -317,6 +382,7 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                         columns={visibleColumns}
                         data={data}
                         filterValue={filterValue}
+                        filterMenuItem={filterMenuItem}
                         onSetFilter={addFilter}
                     />
                     <ToggleColumnButton
@@ -342,51 +408,53 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                 </div>
             </div>
             <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
-            <Table className={classes.table}>
-                <TableHead>
-                    <TableRow>
-                        {!!visibleColumns && visibleColumns.map((column) => (
-                                <TableHeadButton column={column} onSortColumn={sortColumn} sorts={sorts}/>
-                            )
-                        )}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {!!pageData && pageData.map((item, itemIndex) => (
-                        <TableRow key={itemIndex}>
+            <div className={classes.tableContainer}>
+                <Table className={classes.table}>
+                    <TableHead>
+                        <TableRow>
                             {!!visibleColumns && visibleColumns.map((column) => (
-                                <TableCell key={column.id} align={column.align}
+                                    <TableHeadButton column={column} onSortColumn={sortColumn} sorts={sorts}/>
+                                )
+                            )}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {!!pageData && pageData.map((row, itemIndex) => (
+                            <MUITableRow
+                                key={itemIndex}
+                                row={row}
+                                options={options}
+                                colValue={colValue}
+                                onRowClick={handleOnRowClick}
+                                visibleColumns={visibleColumns}
+                            />
+                        ))}
+                        {options.fillEmptyRows && emptyRows.map((x, i) => (
+                            <TableRow key={i}>
+                                <TableCell colSpan={'100%'}
+                                           style={{borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0}}>&nbsp;</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            {!!visibleColumns && visibleColumns.map((column) => (
+                                <TableCell key={`${column.title}-${column.id}`} {...column.props}
+                                           align={column.align}
+                                           style={{width: !!column.shrink ? 1 : null}}
                                 >
-                                    {colValue(item, column.id)}
+                                    {typeof column.Footer === "function" ? column.Footer(data) : <></>}
                                 </TableCell>
                             ))}
                         </TableRow>
-                    ))}
-                    {options.fillEmptyRows && emptyRows.map((x, i) => (
-                        <TableRow key={i}>
-                            <TableCell colSpan={'100%'}
-                                       style={{borderWidth: i === options.rowsPerPage - pageData.length - 1 ? null : 0}}>&nbsp;</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        {!!visibleColumns && visibleColumns.map((column) => (
-                            <TableCell key={`${column.title}-${column.id}`} {...column.props}
-                                       align={column.align}
-                                       style={{width: !!column.shrink ? 1 : null}}
-                            >
-                                {typeof column.Footer === "function" ? column.Footer(data) : <></>}
-                            </TableCell>
-                        ))}
-                    </TableRow>
-                </TableFooter>
-            </Table>
+                    </TableFooter>
+                </Table>
+            </div>
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
                 count={data.length}
-                rowsPerPage={options.rowsPerPage}
+                rowsPerPage={rowsPerPage}
                 page={currentPage}
                 backIconButtonProps={{
                     'aria-label': 'previous page',
@@ -395,8 +463,7 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                     'aria-label': 'next page',
                 }}
                 onChangePage={(event, newPage) => setCurrentPage(newPage)}
-                onChangeRowsPerPage={() => {
-                }}
+                onChangeRowsPerPage={event => setRowsPerPage(event.target.value)}
             />
         </Paper>
     )
@@ -482,7 +549,7 @@ function ToggleColumnButton({columns, toggledColumns, onToggleColumnVisible}) {
 }
 
 
-function FilterColumnButton({filters, columns, data, filterValue, onSetFilter}) {
+function FilterColumnButton({filters, columns, data, filterValue, filterMenuItem, onSetFilter}) {
 
     const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -524,7 +591,9 @@ function FilterColumnButton({filters, columns, data, filterValue, onSetFilter}) 
                                     <NumericFilter filters={filters} column={column} onSetFilter={onSetFilter}/>
                                 ) : (
                                     <SelectFilter filters={filters} on onSetFilter={onSetFilter} column={column}
-                                                  data={data} filterValue={filterValue}/>
+                                                  data={data} filterValue={filterValue}
+                                                  filterMenuItem={filterMenuItem}
+                                    />
                                 )}
                             </Grid>
                         ))}
@@ -548,6 +617,14 @@ function TextFilter({filters, column, onSetFilter}) {
     )
 }
 
+const operators = {
+    lt: "<",
+    lte: "≤",
+    eq: "=",
+    gt: ">",
+    gte: "≥",
+}
+
 function NumericFilter({filters, column, onSetFilter}) {
 
     const [comparison, setComparison] = useState((filters.find(x => x.columnId === column.id) || {}).type || "eq")
@@ -566,11 +643,9 @@ function NumericFilter({filters, column, onSetFilter}) {
                     value={comparison}
                     onChange={event => setComparison(event.target.value)}
                 >
-                    <MenuItem value={"lt"}>&lt;</MenuItem>
-                    <MenuItem value={"lte"}>&le;</MenuItem>
-                    <MenuItem value={"eq"}>=</MenuItem>
-                    <MenuItem value={"gt"}>&gt;</MenuItem>
-                    <MenuItem value={"gte"}>&ge;</MenuItem>
+                    {Object.keys(operators).map(key => (
+                        <MenuItem value={key}>{operators[key]}</MenuItem>
+                    ))}
                 </Select>
             </FormControl>
             <FormControl style={{flex: 1}}>
@@ -585,7 +660,7 @@ function NumericFilter({filters, column, onSetFilter}) {
     )
 }
 
-function SelectFilter({filters, onSetFilter, column, data, filterValue}) {
+function SelectFilter({filters, onSetFilter, column, data, filterValue, filterMenuItem}) {
 
     const rowSet = data.reduce((acc, row) => {
         const value = filterValue(row, column.id)
@@ -603,7 +678,7 @@ function SelectFilter({filters, onSetFilter, column, data, filterValue}) {
                 <MenuItem value={""}>All</MenuItem>
                 {Object.keys(rowSet).map(value => (
                     <MenuItem key={value} value={value}>
-                        {typeof column.filterMenuItem === "function" ? column.filterMenuItem(rowSet[value]) : value}
+                        {filterMenuItem(rowSet[value], column.id)}
                     </MenuItem>
                 ))}
             </Select>
@@ -616,14 +691,19 @@ const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
         <div style={{display: "flex", margin: 16}}>
             <Typography style={{marginRight: 16}}>Filters:</Typography>
             <div style={{display: "flex", margin: -4}}>
-                {filters.map((filter, filterId) => (
-                    <Chip
-                        key={filterId}
-                        style={{margin: 4}}
-                        label={`${filter.columnId === -1 ? "" : `${columns.find(x => x.id === filter.columnId).title}: `}${filter.value}`}
-                        onDelete={() => onRemoveFilter(filterId)}
-                    />
-                ))}
+                {filters.map((filter, filterId) => {
+
+                    const filterLabel = `${filter.columnId === -1 ? "" : `${columns.find(x => x.id === filter.columnId).title}: `}${operators[filter.type] || ""}${filter.value}`
+
+                    return (
+                        <Chip
+                            key={filterId}
+                            style={{margin: 4}}
+                            label={filterLabel}
+                            onDelete={() => onRemoveFilter(filterId)}
+                        />
+                    )
+                })}
             </div>
         </div>
     </Collapse>

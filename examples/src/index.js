@@ -1,15 +1,53 @@
 import React, {useState} from "react";
 import ReactDOM from "react-dom";
 import data from "./data.json";
-import {Card, CardContent, Divider, FormControlLabel, Grid, Switch, TextField, Typography} from "@material-ui/core";
+import {
+    Card,
+    CardContent,
+    Checkbox,
+    Divider,
+    FormControlLabel,
+    Grid,
+    Switch,
+    TextField,
+    Typography
+} from "@material-ui/core";
 
 import "./styles.css";
 import MUIDatatable from "../../src";
 
 function App() {
+    const [options, setOptions] = useState({
+        fillEmptyRows: false,
+        rowsPerPage: 10,
+        csvExport: true,
+        csvFilename: "my_table_export",
+        initialSorts: [
+            {columnId: 'age', direction: "asc"},
+            {columnId: 'name', direction: "asc"},
+        ],
+        initialFilters: [
+            // {columnId: 'name', value: "se", type: "exact"},
+        ],
+        onRowClick: (event, row) => {
+            if (event.ctrlKey || event.metaKey) {
+                alert('ctrl clicked row ' + JSON.stringify(row))
+            } else {
+                alert('clicked row ' + JSON.stringify(row))
+            }
+        },
+        maxRowHeight: 50,
+    });
     const columns = [
         {
-            id: 'name',
+            title: "Active",
+            accessor: 'isActive',
+            Cell: row => <Checkbox checked={row.isActive}/>,
+            shrink: true,
+            padding: 0,
+        },
+        {
+            id: "name",
             title: "Name",
             Cell: item => `${item.name.first} ${item.name.last}`,
             filterType: "text",
@@ -28,9 +66,24 @@ function App() {
             filterType: "numeric",
         },
         {
+            title: "Gender",
+            accessor: "gender",
+            Cell: row => <div style={{
+                height: 16,
+                width: 16,
+                borderRadius: 8,
+                backgroundColor: row.gender === "male" ? '#3da6ff' : '#ff77b0'
+            }}/>,
+            shrink: true,
+        },
+        {
             title: "Eye Color",
             accessor: "eyeColor",
-            Cell: row => <div style={{width: 16, height: 16, borderRadius: 4, backgroundColor: row.eyeColor}} />,
+            Cell: row => <div style={{display: "flex"}}>
+                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: row.eyeColor}}/>
+                <div style={{width: 4}} />
+                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: row.eyeColor}}/>
+            </div>,
             shrink: true,
         },
         {
@@ -56,27 +109,26 @@ function App() {
             filterType: "numeric",
         },
         {
+            title: "Address",
+            accessor: "address",
+            filterType: "text",
+        },
+        {
             title: "Picture",
             Cell: row => <img src={row.picture} style={{width: 32, height: 32}}/>,
             shrink: true,
             csvValue: row => row.picture,
             filterValue: row => row.picture,
             filterMenuItem: row => <img src={row.picture} style={{width: 32, height: 32}}/>
-        }
+        },
+        {
+            title: "About",
+            accessor: "about",
+            filterType: "text",
+            noWrap: false,
+            minWidth: 500,
+        },
     ];
-    const [options, setOptions] = useState({
-        fillEmptyRows: false,
-        rowsPerPage: 10,
-        csvExport: false,
-        csvFilename: "my_table_export",
-        initialSorts: [
-            {columnId: 'age', direction: "asc"},
-            {columnId: 'name', direction: "asc"},
-        ],
-        initialFilters: [
-            // {columnId: 'name', value: "se", type: "exact"},
-        ],
-    });
     const [filters, setFilters] = useState([]);
     const [sorts, setSorts] = useState([]);
 
@@ -97,7 +149,7 @@ function App() {
 
                                         if (typeof optionValue === "boolean") {
                                             return (
-                                                <Grid key={optionKey} item xs={12} sm={6}>
+                                                <Grid key={optionKey} item xs={12} sm={6} md={4}>
                                                     <FormControlLabel
                                                         control={
                                                             <Switch
@@ -117,7 +169,7 @@ function App() {
                                             );
                                         } else if (typeof optionValue === "number") {
                                             return (
-                                                <Grid key={optionKey} item xs={12} sm={6}>
+                                                <Grid key={optionKey} item xs={12} sm={6} md={4}>
                                                     <TextField
                                                         fullWidth
                                                         label={optionKey}
@@ -129,6 +181,22 @@ function App() {
                                                             }))
                                                         }
                                                         type="number"
+                                                    />
+                                                </Grid>
+                                            );
+                                        } else if (typeof optionValue === "string") {
+                                            return (
+                                                <Grid key={optionKey} item xs={12} sm={6} md={4}>
+                                                    <TextField
+                                                        fullWidth
+                                                        label={optionKey}
+                                                        value={optionValue}
+                                                        onChange={event =>
+                                                            setOptions(prev => ({
+                                                                ...prev,
+                                                                [optionKey]: event.target.value
+                                                            }))
+                                                        }
                                                     />
                                                 </Grid>
                                             );
