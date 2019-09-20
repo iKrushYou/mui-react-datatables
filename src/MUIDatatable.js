@@ -184,13 +184,13 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     const colValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.Cell === "function" && c.Cell(row))
+        return (typeof c.Cell === "function" && c.Cell(row[c.accessor], row))
             || row[c.accessor]
     }
 
     const sortValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.sortValue === "function" && c.sortValue(row))
+        return (typeof c.sortValue === "function" && c.sortValue(row[c.accessor], row))
             || row[c.accessor]
             || colValue(row, columnId)
     }
@@ -269,14 +269,14 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     const filterValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.filterValue === "function" && c.filterValue(row))
+        return (typeof c.filterValue === "function" && c.filterValue(row[c.accessor], row))
             || row[c.accessor]
             || colValue(row, columnId)
     }
 
     const filterMenuItem = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.filterMenuItem === "function" && c.filterMenuItem(row))
+        return (typeof c.filterMenuItem === "function" && c.filterMenuItem(row[c.accessor], row))
             || colValue(row, columnId)
     }
 
@@ -336,7 +336,7 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     const csvValue = (row, columnId) => {
         const c = getColumn(columnId)
-        return (typeof c.csvValue === "function" && c.csvValue(row))
+        return (typeof c.csvValue === "function" && c.csvValue(row[c.accessor], row))
             || row[c.accessor]
             || colValue(row, columnId)
     }
@@ -365,49 +365,51 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
 
     return (
         <Paper className={classes.root}>
-            <div style={{display: "flex", margin: 16}}>
-                <TitleSearchBar
-                    title={title}
-                    showSearch={showSearch}
-                    setShowSearch={setShowSearch}
-                    searchFieldRef={searchFieldRef}
-                    searchTerm={searchTerm}
-                    addFilter={addFilter}
-                />
-                <div style={{flex: 1}}/>
-                <div style={{flex: -1, display: 'flex', flexDirection: "row-reverse"}}>
-                    {buttons}
-                    <FilterColumnButton
-                        filters={filters}
-                        columns={visibleColumns}
-                        data={data}
-                        filterValue={filterValue}
-                        filterMenuItem={filterMenuItem}
-                        onSetFilter={addFilter}
+            <div style={{padding: 16}}>
+                <div style={{display: "flex"}}>
+                    <TitleSearchBar
+                        title={title}
+                        showSearch={showSearch}
+                        setShowSearch={setShowSearch}
+                        searchFieldRef={searchFieldRef}
+                        searchTerm={searchTerm}
+                        addFilter={addFilter}
                     />
-                    <ToggleColumnButton
-                        columns={columns}
-                        toggledColumns={toggledColumns}
-                        onToggleColumnVisible={handleToggleColumnVisible}
-                    />
-                    {options.csvExport && (
-                        <Tooltip title={"Save to CSV"} placement={"top"}>
-                            <CSVLink data={generateCsvData()}
-                                     filename={options.csvFilename || title || "table"}>
-                                <IconButton>
-                                    <SaveIcon/>
-                                </IconButton>
-                            </CSVLink>
+                    <div style={{flex: 1}}/>
+                    <div style={{flex: -1, display: 'flex', flexDirection: "row-reverse"}}>
+                        {buttons}
+                        <FilterColumnButton
+                            filters={filters}
+                            columns={visibleColumns}
+                            data={data}
+                            filterValue={filterValue}
+                            filterMenuItem={filterMenuItem}
+                            onSetFilter={addFilter}
+                        />
+                        <ToggleColumnButton
+                            columns={columns}
+                            toggledColumns={toggledColumns}
+                            onToggleColumnVisible={handleToggleColumnVisible}
+                        />
+                        {options.csvExport && (
+                            <Tooltip title={"Save to CSV"} placement={"top"}>
+                                <CSVLink data={generateCsvData()}
+                                         filename={options.csvFilename || title || "table"}>
+                                    <IconButton>
+                                        <SaveIcon/>
+                                    </IconButton>
+                                </CSVLink>
+                            </Tooltip>
+                        )}
+                        <Tooltip title={"Search"} placement={"top"}>
+                            <IconButton onClick={handleToggleSearch}>
+                                <SearchIcon/>
+                            </IconButton>
                         </Tooltip>
-                    )}
-                    <Tooltip title={"Search"} placement={"top"}>
-                        <IconButton onClick={handleToggleSearch}>
-                            <SearchIcon/>
-                        </IconButton>
-                    </Tooltip>
+                    </div>
                 </div>
+                <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
             </div>
-            <FiltersSummary filters={filters} onRemoveFilter={removeFilter} columns={columns}/>
             <div className={classes.tableContainer}>
                 <Table className={classes.table}>
                     <TableHead>
@@ -443,7 +445,7 @@ export default function MUIDatatable({data: dataInput, options: optionsInput, co
                                            align={column.align}
                                            style={{width: !!column.shrink ? 1 : null}}
                                 >
-                                    {typeof column.Footer === "function" ? column.Footer(data) : <></>}
+                                    {typeof column.Footer === "function" ? column.Footer(data, column) : <></>}
                                 </TableCell>
                             ))}
                         </TableRow>
@@ -688,7 +690,7 @@ function SelectFilter({filters, onSetFilter, column, data, filterValue, filterMe
 
 const FiltersSummary = ({filters, columns, onRemoveFilter}) => (
     <Collapse in={!!filters && filters.length > 0}>
-        <div style={{display: "flex", margin: 16}}>
+        <div style={{display: "flex"}}>
             <Typography style={{marginRight: 16}}>Filters:</Typography>
             <div style={{display: "flex", margin: -4}}>
                 {filters.map((filter, filterId) => {

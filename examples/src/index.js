@@ -38,6 +38,7 @@ function App() {
         },
         maxRowHeight: 50,
     });
+
     const columns = [
         {
             title: "Active",
@@ -49,7 +50,8 @@ function App() {
         {
             id: "name",
             title: "Name",
-            Cell: item => `${item.name.first} ${item.name.last}`,
+            accessor: "name",
+            Cell: (value, row) => `${value.first} ${value.last}`,
             filterType: "text",
         },
         {
@@ -62,7 +64,7 @@ function App() {
             title: "Age",
             accessor: "age",
             align: "right",
-            Footer: data => `Avg: ${(data.reduce((acc, cur) => acc + cur.age, 0) / data.length).toFixed(2)}`,
+            Footer: (data, column) => `Avg: ${(data.reduce((acc, cur) => acc + cur[column.accessor], 0) / data.length).toFixed(2)}`,
             filterType: "numeric",
         },
         {
@@ -79,10 +81,10 @@ function App() {
         {
             title: "Eye Color",
             accessor: "eyeColor",
-            Cell: row => <div style={{display: "flex"}}>
-                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: row.eyeColor}}/>
+            Cell: value => <div style={{display: "flex"}}>
+                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: value}}/>
                 <div style={{width: 4}} />
-                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: row.eyeColor}}/>
+                <div style={{width: 32, height: 16, borderRadius: 8, backgroundColor: value}}/>
             </div>,
             shrink: true,
         },
@@ -90,19 +92,19 @@ function App() {
             title: "Phone",
             accessor: "phone",
             align: "right",
-            sortValue: item => parseInt(item.phone.replace(/[^0-9]+/g, "")),
+            sortValue: value => parseInt(value.replace(/[^0-9]+/g, "")),
             filterType: "text",
         },
         {
             title: "Balance",
             accessor: "balance",
             align: "right",
-            sortValue: item => parseFloat(item.balance.replace(/[^0-9.-]+/g, "")),
-            Footer: data =>
+            sortValue: value => parseFloat(value.replace(/[^0-9.-]+/g, "")),
+            Footer: (data, column) =>
                 `$${(
                     data.reduce(
                         (acc, cur) =>
-                            acc + parseFloat(cur.balance.replace(/[^0-9.-]+/g, "")),
+                            acc + parseFloat(cur[column.accessor].replace(/[^0-9.-]+/g, "")),
                         0
                     ) / data.length
                 ).toFixed(2)}`,
@@ -115,11 +117,12 @@ function App() {
         },
         {
             title: "Picture",
-            Cell: row => <img src={row.picture} style={{width: 32, height: 32}}/>,
+            accessor: "picture",
+            Cell: value => <img src={value} style={{width: 32, height: 32}}/>,
             shrink: true,
-            csvValue: row => row.picture,
-            filterValue: row => row.picture,
-            filterMenuItem: row => <img src={row.picture} style={{width: 32, height: 32}}/>
+            csvValue: value => value,
+            filterValue: value => value,
+            filterMenuItem: (value, row) => <img src={value} style={{width: 32, height: 32}}/>
         },
         {
             title: "About",
@@ -129,6 +132,7 @@ function App() {
             minWidth: 500,
         },
     ];
+
     const [filters, setFilters] = useState([]);
     const [sorts, setSorts] = useState([]);
 
