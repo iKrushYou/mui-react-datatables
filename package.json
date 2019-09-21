@@ -17,7 +17,13 @@
     "build-dev-w": "webpack --mode development --config webpack.config.js",
     "prerelease": "npm version prerelease && npm run build-dev",
     "pack": "mkdir -p builds && cd builds && npm pack ../",
-    "publish-dev": "npm publish --tag dev"
+    "publish-dev": "npm publish --tag dev",
+    "lint:scss": "stylelint 'src/**/*.scss' --syntax scss",
+    "lint:scss:fix": "stylelint 'src/**/*.scss' --syntax scss --fix",
+    "lint:js": "eslint . --ext .js,.jsx",
+    "lint:js:fix": "prettier-eslint . --ext .js,.jsx --write",
+    "lint": "eslint 'src/**/*.js' 'examples/**/*.js'",
+    "lint:fix": "prettier-eslint"
   },
   "repository": {
     "type": "git",
@@ -48,9 +54,14 @@
     "axios": "^0.19.0",
     "babel-loader": "^8.0.0",
     "css-loader": "^3.0.0",
+    "eslint": "^6.4.0",
+    "eslint-plugin-react": "^7.14.3",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^3.0.0",
+    "lint-staged": "^9.2.5",
     "prettier": "^1.18.2",
+    "prettier-eslint": "^9.0.0",
+    "prettier-eslint-cli": "^5.0.0",
     "pretty-quick": "^1.11.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
@@ -67,5 +78,20 @@
   "peerDependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx}": [
+      "npm run --silent lint:js:fix",
+      "git add"
+    ],
+    "src/**/*.scss": [
+      "npm run --silent lint:scss:fix",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
