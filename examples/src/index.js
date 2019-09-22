@@ -15,6 +15,8 @@ import {
 
 import './styles.css';
 import MUIDatatable from '../../src';
+import { ResponsivePie } from '@nivo/pie';
+import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 
 function App() {
   const [options, setOptions] = useState({
@@ -36,7 +38,7 @@ function App() {
     maxRowHeight: 50,
   });
 
-  const columns = [
+  const [columns, setColumns] = useState([
     {
       title: 'Active',
       accessor: 'isActive',
@@ -68,13 +70,13 @@ function App() {
     {
       title: 'Gender',
       accessor: 'gender',
-      Cell: row => (
+      Cell: value => (
         <div
           style={{
             height: 16,
             width: 16,
             borderRadius: 8,
-            backgroundColor: row.gender === 'male' ? '#3da6ff' : '#ff77b0',
+            backgroundColor: value === 'male' ? '#3da6ff' : '#ff77b0',
           }}
         />
       ),
@@ -131,10 +133,30 @@ function App() {
       noWrap: false,
       minWidth: 500,
     },
-  ];
+  ]);
 
   const [filters, setFilters] = useState([]);
   const [sorts, setSorts] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+
+  const genderCounts = filteredData.reduce(
+    (map, row) => {
+      map[row.gender]++;
+      return map;
+    },
+    { male: 0, female: 0 },
+  );
+  const genderPieData = [
+    {
+      id: 'male',
+      value: genderCounts.male,
+    },
+    {
+      id: 'female',
+      value: genderCounts.female,
+    },
+  ];
+  const genderColors = ['#3da6ff', '#ff77b0'];
 
   return (
     <div className="App">
@@ -217,17 +239,62 @@ function App() {
             <Divider />
           </Grid>
           <Grid item xs={12}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Typography variant={'h4'}>Gender</Typography>
+                <CountPieChart
+                  data={filteredData}
+                  accessor={'gender'}
+                  colors={{
+                    male: '#3da6ff',
+                    female: '#ff77b0',
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant={'h4'}>Eye Color</Typography>
+                <CountPieChart
+                  data={filteredData}
+                  accessor={'eyeColor'}
+                  colors={{
+                    green: '#31aa43',
+                    blue: '#268baa',
+                    brown: '#683028',
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
             <MUIDatatable
               title={'My Table'}
               options={options}
               columns={columns}
               data={data}
-              filtersRef={setFilters}
-              sortsRef={setSorts}
+              filtersRef={filters => {
+                console.log('setting filters', filters);
+                setFilters(filters);
+              }}
+              sortsRef={sorts => {
+                console.log('setting sorts', sorts);
+                setSorts(sorts);
+              }}
+              filteredDataRef={data => {
+                console.log('setting data', data);
+                setFilteredData(data);
+              }}
             />
           </Grid>
           <Grid item xs={12}>
             <Divider />
+          </Grid>
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography>Filtered Data</Typography>
+                <pre>Number of rows: {filteredData.length}</pre>
+              </CardContent>
+            </Card>
           </Grid>
           <Grid item xs={12}>
             <Card>
@@ -253,3 +320,26 @@ function App() {
 
 const rootElement = document.getElementById('root');
 ReactDOM.render(<App />, rootElement);
+
+function CountPieChart({ data, accessor, colors }) {
+  const counts = data.reduce((counts, row) => {
+    if (!counts[row[accessor]]) counts[row[accessor]] = 0;
+    counts[row[accessor]]++;
+    return counts;
+  }, {});
+
+  console.log('counts', counts);
+
+  const chartData = Object.keys(counts).map(key => ({ name: key, value: counts[key], fill: colors[key] }));
+
+  return (
+    <PieChart width={250} height={250}>
+      <Pie dataKey="value" data={chartData}>
+        {chartData.map((entry, index) => (
+          <Cell key={index} fill={entry.fill} />
+        ))}
+      </Pie>
+      <Tooltip />
+    </PieChart>
+  );
+}

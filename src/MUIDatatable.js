@@ -87,6 +87,7 @@ MUIDatatable.defaultProps = {
   buttons: [],
   filtersRef: () => {},
   sortsRef: () => {},
+  filteredDataRef: () => {},
 };
 
 const mapObject = (source, destination) => {
@@ -109,6 +110,7 @@ export default function MUIDatatable({
   buttons,
   filtersRef,
   sortsRef,
+  filteredDataRef,
 }) {
   const classes = useStyles();
 
@@ -139,11 +141,10 @@ export default function MUIDatatable({
     ];
   }, [columnsInput]);
 
-  console.log('columns', columns);
-
   const getColumn = columnId => columns.find(x => x.id === columnId);
 
-  let data = [...dataInput];
+  const [data, setData] = useState([]);
+  useEffect(() => setData([...dataInput]), [dataInput]);
 
   /*  Sorting  */
 
@@ -233,7 +234,7 @@ export default function MUIDatatable({
       }, {}),
       ...prev,
     }));
-  }, [columns]);
+  }, [columnsInput]);
 
   const handleToggleColumnVisible = columnId => {
     setToggledColumns(prev => ({
@@ -242,7 +243,7 @@ export default function MUIDatatable({
     }));
   };
 
-  const visibleColumns = columns.filter(column => toggledColumns[column.id]);
+  const visibleColumns = useMemo(() => columns.filter(column => toggledColumns[column.id]), [columns, toggledColumns]);
 
   /*  Search Filtering  */
 
@@ -302,22 +303,30 @@ export default function MUIDatatable({
     );
   };
 
-  filters.forEach(filter => {
-    if (filter.columnId === -1) {
-      data = data.filter(row =>
-        visibleColumns.reduce(
-          (acc, column) =>
-            acc ||
-            String(colValue(row, column.id))
-              .toLowerCase()
-              .includes(String(filter.value).toLowerCase()),
-          false,
-        ),
-      );
-    } else {
-      data = filterFn(data, filter);
-    }
-  });
+  const filteredData = useMemo(() => {
+    let tempData = [...data];
+
+    filters.forEach(filter => {
+      if (filter.columnId === -1) {
+        tempData = tempData.filter(row =>
+          visibleColumns.reduce(
+            (acc, column) =>
+              acc ||
+              String(colValue(row, column.id))
+                .toLowerCase()
+                .includes(String(filter.value).toLowerCase()),
+            false,
+          ),
+        );
+      } else {
+        tempData = filterFn(data, filter);
+      }
+    });
+
+    console.log('generate filteredData rows: ' + tempData.length);
+
+    return tempData;
+  }, [data, filters, columnsInput, toggledColumns]);
 
   const [showSearch, setShowSearch] = useState(false);
   const searchTerm = (filters.find(x => x.columnId === -1) || {}).value || '';
@@ -333,16 +342,16 @@ export default function MUIDatatable({
 
   /*  Refs  */
 
-  filtersRef(filters);
-  sortsRef(sorts);
+  useEffect(() => filtersRef(filters), [filters]);
+  useEffect(() => sortsRef(sorts), [sorts]);
+  useEffect(() => filteredDataRef(filteredData), [filteredData]);
 
   /*  Pagination  */
 
   const [currentPage, setCurrentPage] = useState(0);
 
-  const pageData = data.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage);
+  const pageData = filteredData.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage);
 
-  console.log('emptyRows', Math.max(0, rowsPerPage - pageData.length));
   const emptyRows = new Array(Math.max(0, rowsPerPage - pageData.length)).fill(0);
 
   /*  CSV Download  */
@@ -357,9 +366,9 @@ export default function MUIDatatable({
   };
 
   const generateCsvData = () => {
-    if (!data) return [[]];
+    if (!filteredData) return [[]];
     const headers = visibleColumns.map(column => column.csvHeader || column.title);
-    const csvData = [headers, ...data.map(row => visibleColumns.map(column => csvValue(row, column.id)))];
+    const csvData = [headers, ...filteredData.map(row => visibleColumns.map(column => csvValue(row, column.id)))];
     return csvData;
   };
 
@@ -372,6 +381,8 @@ export default function MUIDatatable({
   };
 
   /*  Rendering  */
+
+  console.log('render');
 
   return (
     <Paper className={classes.root}>
@@ -391,7 +402,7 @@ export default function MUIDatatable({
             <FilterColumnButton
               filters={filters}
               columns={visibleColumns}
-              data={data}
+              data={filteredData}
               filterValue={filterValue}
               filterMenuItem={filterMenuItem}
               onSetFilter={addFilter}
@@ -461,7 +472,7 @@ export default function MUIDatatable({
                     {...column.props}
                     align={column.align}
                     style={{ width: column.shrink ? 1 : null }}>
-                    {typeof column.Footer === 'function' ? column.Footer(data, column) : <></>}
+                    {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
                   </TableCell>
                 ))}
             </TableRow>
@@ -471,7 +482,7 @@ export default function MUIDatatable({
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={data.length}
+        count={filteredData.length}
         rowsPerPage={rowsPerPage}
         page={currentPage}
         backIconButtonProps={{
