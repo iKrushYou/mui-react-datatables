@@ -89,6 +89,7 @@ The component accepts the following props:
 |**`data`**|[object]|`[]`|true|Data to be supplied to table.
 |**`filtersRef`**|function||false|Accessor for filters array. <br /> `(filters) => {}`
 |**`sortsRef`**|function||false|Accessor for sorts array. <br /> `(sorts) => {}`
+|**`filteredDataRef`**|function||false|Accessor for filtered data. <br /> `(filteredData) => {}`
 
 #### <a name="options-field"></a>options:
 |Name|Type|Default|Required|Description
