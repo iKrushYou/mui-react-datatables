@@ -36,13 +36,14 @@ function App() {
       }
     },
     maxRowHeight: 50,
+    footerRow: true,
   });
 
   const [columns, setColumns] = useState([
     {
       title: 'Active',
       accessor: 'isActive',
-      Cell: row => <Checkbox checked={row.isActive} />,
+      Cell: (value, row) => <Checkbox checked={value} />,
       shrink: true,
       padding: 0,
     },
@@ -51,6 +52,7 @@ function App() {
       title: 'Name',
       accessor: 'name',
       Cell: (value, row) => `${value.first} ${value.last}`,
+      sortValue: value => `${value.first} ${value.last}`,
       filterType: 'text',
     },
     {

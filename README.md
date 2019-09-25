@@ -100,6 +100,9 @@ The component accepts the following props:
 |**`csvFilename`**|string|`title` &#124;&#124; `"table"`|false|Filename for CSV export.
 |**`initialSorts`**|[object]|`[]`|false|Initial sorting list.
 |**`initialFilters`**|[object]|`[]`|false|Initial filtering list.
+|**`onRowClick`**|function||false|Function call when row is clicked. <br /> `(row, event) => {}`
+|**`maxRowHeight`**|number|none|false|Max height of a row.
+|**`footerRow`**|[object]|`[]`|false|Should the footer row be displayed.
 
 
 #### <a name="columns-field"></a>columns[]:

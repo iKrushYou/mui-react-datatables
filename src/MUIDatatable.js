@@ -61,6 +61,7 @@ const defaultOptions = {
   initialFilters: [],
   onRowClick: null,
   maxRowHeight: null,
+  footerRow: false,
 };
 
 const defaultColumnValues = {
@@ -376,7 +377,7 @@ export default function MUIDatatable({
 
   const handleOnRowClick = (event, row) => {
     if (typeof options.onRowClick === 'function') {
-      options.onRowClick(event, row);
+      options.onRowClick(row, event);
     }
   };
 
@@ -463,20 +464,22 @@ export default function MUIDatatable({
                 </TableRow>
               ))}
           </TableBody>
-          <TableFooter>
-            <TableRow>
-              {!!visibleColumns &&
-                visibleColumns.map(column => (
-                  <TableCell
-                    key={`${column.title}-${column.id}`}
-                    {...column.props}
-                    align={column.align}
-                    style={{ width: column.shrink ? 1 : null }}>
-                    {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
-                  </TableCell>
-                ))}
-            </TableRow>
-          </TableFooter>
+          {options.footerRow && (
+            <TableFooter>
+              <TableRow>
+                {!!visibleColumns &&
+                  visibleColumns.map(column => (
+                    <TableCell
+                      key={`${column.title}-${column.id}`}
+                      {...column.props}
+                      align={column.align}
+                      style={{ width: column.shrink ? 1 : null }}>
+                      {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
+                    </TableCell>
+                  ))}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
       <TablePagination
