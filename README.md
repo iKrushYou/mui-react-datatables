@@ -101,8 +101,9 @@ The component accepts the following props:
 |**`initialSorts`**|[object]|`[]`|false|Initial sorting list.
 |**`initialFilters`**|[object]|`[]`|false|Initial filtering list.
 |**`onRowClick`**|function||false|Function call when row is clicked. <br /> `(row, event) => {}`
-|**`maxRowHeight`**|number|none|false|Max height of a row.
+|**`maxRowHeight`**|number|`null`|false|Max height of a row.
 |**`footerRow`**|[object]|`[]`|false|Should the footer row be displayed.
+|**`highlightedRowId`**|number|`null`|false|`id` of row to highlight.
 
 
 #### <a name="columns-field"></a>columns[]:

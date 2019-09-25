@@ -19,6 +19,7 @@ import { ResponsivePie } from '@nivo/pie';
 import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 
 function App() {
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [options, setOptions] = useState({
     fillEmptyRows: false,
     rowsPerPage: 10,
@@ -28,15 +29,17 @@ function App() {
     initialFilters: [
       // {columnId: 'name', value: "se", type: "exact"},
     ],
-    onRowClick: (event, row) => {
+    onRowClick: (row, event) => {
       if (event.ctrlKey || event.metaKey) {
-        alert('ctrl clicked row ' + JSON.stringify(row));
+        // alert('ctrl clicked row ' + JSON.stringify(row));
       } else {
-        alert('clicked row ' + JSON.stringify(row));
+        // alert('clicked row ' + JSON.stringify(row));
       }
+      setOptions(prev => ({ ...prev, selectedRowId: row.id }));
     },
     maxRowHeight: 50,
     footerRow: true,
+    selectedRowId: selectedRowId,
   });
 
   const [columns, setColumns] = useState([

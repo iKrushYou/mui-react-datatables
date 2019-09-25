@@ -62,6 +62,7 @@ const defaultOptions = {
   onRowClick: null,
   maxRowHeight: null,
   footerRow: false,
+  selectedRowId: null,
 };
 
 const defaultColumnValues = {
@@ -116,6 +117,7 @@ export default function MUIDatatable({
   const classes = useStyles();
 
   const options = useMemo(() => mapObject(optionsInput, defaultOptions), [optionsInput]);
+  console.log('options', options);
 
   const [rowsPerPage, setRowsPerPage] = useState(defaultOptions.rowsPerPage);
 

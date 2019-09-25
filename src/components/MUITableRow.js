@@ -15,15 +15,21 @@ const useStyles = makeStyles(theme => ({
       backgroundColor: '#dadada',
     },
   },
+  tableRowSelected: {
+    backgroundColor: '#dadada',
+  },
 }));
 
 export default function MUITableRow({ row, onRowClick, visibleColumns, colValue, options }) {
   const classes = useStyles();
 
   const clickable = typeof options.onRowClick === 'function';
+  const selected = !!options.selectedRowId && row.id === options.selectedRowId;
 
   return (
-    <TableRow className={classnames(clickable && classes.tableRowClick)} onClick={event => onRowClick(event, row)}>
+    <TableRow
+      className={classnames(clickable && classes.tableRowClick, selected && classes.tableRowSelected)}
+      onClick={event => onRowClick(event, row)}>
       {!!visibleColumns &&
         visibleColumns.map(column => (
           <MUITableCell key={column.id} colValue={colValue} column={column} options={options} row={row} />
