@@ -40,6 +40,9 @@ function App() {
     maxRowHeight: 50,
     footerRow: true,
     selectedRowId: selectedRowId,
+    loading: false,
+    LoadingCell: () => <div>Loading...</div>,
+    NoRowsCell: () => <div>There are no rows...</div>,
   });
 
   const [columns, setColumns] = useState([

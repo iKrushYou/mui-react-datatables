@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Collapse, makeStyles, Select, TableFooter, Tooltip, Typography } from '@material-ui/core';
+import { CircularProgress, Collapse, makeStyles, Select, TableFooter, Tooltip, Typography } from '@material-ui/core';
 import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -63,6 +63,7 @@ const defaultOptions = {
   maxRowHeight: null,
   footerRow: false,
   selectedRowId: null,
+  loading: false,
 };
 
 const defaultColumnValues = {
@@ -435,52 +436,78 @@ export default function MUIDatatable({
       </div>
       <div className={classes.tableContainer}>
         <Table className={classes.table}>
-          <TableHead>
+          {options.loading ? (
             <TableRow>
-              {!!visibleColumns &&
-                visibleColumns.map(column => (
-                  <TableHeadButton column={column} onSortColumn={sortColumn} sorts={sorts} />
-                ))}
+              <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {typeof options.LoadingCell === 'function' ? (
+                  options.LoadingCell()
+                ) : (
+                  <div style={{ margin: 32 }}>
+                    <CircularProgress indeterminate />
+                  </div>
+                )}
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {!!pageData &&
-              pageData.map((row, itemIndex) => (
-                <MUITableRow
-                  key={itemIndex}
-                  row={row}
-                  options={options}
-                  colValue={colValue}
-                  onRowClick={handleOnRowClick}
-                  visibleColumns={visibleColumns}
-                />
-              ))}
-            {options.fillEmptyRows &&
-              emptyRows.map((x, i) => (
-                <TableRow key={i}>
-                  <TableCell
-                    colSpan={'100%'}
-                    style={{ borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0 }}>
-                    &nbsp;
-                  </TableCell>
+          ) : data.length === 0 ? (
+            <TableRow>
+              <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {typeof options.NoRowsCell === 'function' ? (
+                  options.NoRowsCell()
+                ) : (
+                  <div style={{ margin: 32 }}>No data available</div>
+                )}
+              </TableCell>
+            </TableRow>
+          ) : (
+            <>
+              <TableHead>
+                <TableRow>
+                  {!!visibleColumns &&
+                    visibleColumns.map(column => (
+                      <TableHeadButton column={column} onSortColumn={sortColumn} sorts={sorts} />
+                    ))}
                 </TableRow>
-              ))}
-          </TableBody>
-          {options.footerRow && (
-            <TableFooter>
-              <TableRow>
-                {!!visibleColumns &&
-                  visibleColumns.map(column => (
-                    <TableCell
-                      key={`${column.title}-${column.id}`}
-                      {...column.props}
-                      align={column.align}
-                      style={{ width: column.shrink ? 1 : null }}>
-                      {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
-                    </TableCell>
+              </TableHead>
+              <TableBody>
+                {!!pageData &&
+                  pageData.map((row, itemIndex) => (
+                    <MUITableRow
+                      key={itemIndex}
+                      row={row}
+                      options={options}
+                      colValue={colValue}
+                      onRowClick={handleOnRowClick}
+                      visibleColumns={visibleColumns}
+                    />
                   ))}
-              </TableRow>
-            </TableFooter>
+                {options.fillEmptyRows &&
+                  emptyRows.map((x, i) => (
+                    <TableRow key={i}>
+                      <TableCell
+                        colSpan={'100%'}
+                        style={{ borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0 }}>
+                        &nbsp;
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+              {options.footerRow && (
+                <TableFooter>
+                  <TableRow>
+                    {!!visibleColumns &&
+                      visibleColumns.map(column => (
+                        <TableCell
+                          key={`${column.title}-${column.id}`}
+                          {...column.props}
+                          align={column.align}
+                          style={{ width: column.shrink ? 1 : null }}>
+                          {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
+                        </TableCell>
+                      ))}
+                  </TableRow>
+                </TableFooter>
+              )}
+            </>
           )}
         </Table>
       </div>

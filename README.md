@@ -104,7 +104,9 @@ The component accepts the following props:
 |**`maxRowHeight`**|number|`null`|false|Max height of a row.
 |**`footerRow`**|[object]|`[]`|false|Should the footer row be displayed.
 |**`highlightedRowId`**|number|`null`|false|`id` of row to highlight.
-
+|**`loading`**|boolean|`false`|false|Should table display loading cell.
+|**`LoadingCell`**|function||false|Component to render when `loading` is `true`
+|**`NoRowsCell`**|function||false|Component to render when `data.length` is `0`
 
 #### <a name="columns-field"></a>columns[]:
 |Name|Type|Default|Required|Description
