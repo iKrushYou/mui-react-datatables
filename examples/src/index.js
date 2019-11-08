@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import data from './data.json';
+import dataJson from './data.json';
 import {
   Card,
   CardContent,
@@ -45,9 +45,12 @@ function App() {
     NoRowsCell: () => <div>There are no rows...</div>,
   });
 
+  const [data, setData] = useState([]);
+
   useLayoutEffect(() => {
     setTimeout(() => {
       console.log('stop loading');
+      setData(dataJson);
       setOptions(prev => ({ ...prev, loading: false }));
     }, 1500);
   }, []);

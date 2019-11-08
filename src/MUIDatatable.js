@@ -451,7 +451,7 @@ export default function MUIDatatable({
           {/*      )}*/}
           {/*    </TableCell>*/}
           {/*  </TableRow>*/}
-          {data.length === 0 ? (
+          {!options.loading && filteredData.length === 0 ? (
             <TableRow>
               <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {typeof options.NoRowsCell === 'function' ? (
