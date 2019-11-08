@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import data from './data.json';
 import {
@@ -40,10 +40,17 @@ function App() {
     maxRowHeight: 50,
     footerRow: true,
     selectedRowId: selectedRowId,
-    loading: false,
+    loading: true,
     LoadingCell: () => <div>Loading...</div>,
     NoRowsCell: () => <div>There are no rows...</div>,
   });
+
+  useLayoutEffect(() => {
+    setTimeout(() => {
+      console.log('stop loading');
+      setOptions(prev => ({ ...prev, loading: false }));
+    }, 1500);
+  }, []);
 
   const [columns, setColumns] = useState([
     {
@@ -124,6 +131,7 @@ function App() {
       title: 'Address',
       accessor: 'address',
       filterType: 'text',
+      visible: false,
     },
     {
       title: 'Picture',
@@ -133,6 +141,7 @@ function App() {
       csvValue: value => value,
       filterValue: value => value,
       filterMenuItem: (value, row) => <img src={value} style={{ width: 32, height: 32 }} />,
+      visible: false,
     },
     {
       title: 'About',
@@ -140,6 +149,7 @@ function App() {
       filterType: 'text',
       noWrap: false,
       minWidth: 500,
+      visible: false,
     },
   ]);
 

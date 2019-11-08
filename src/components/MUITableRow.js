@@ -31,8 +31,15 @@ export default function MUITableRow({ row, onRowClick, visibleColumns, colValue,
       className={classnames(clickable && classes.tableRowClick, selected && classes.tableRowSelected)}
       onClick={event => onRowClick(event, row)}>
       {!!visibleColumns &&
-        visibleColumns.map(column => (
-          <MUITableCell key={column.id} colValue={colValue} column={column} options={options} row={row} />
+        visibleColumns.map((column, index) => (
+          <MUITableCell
+            key={column.id}
+            colValue={colValue}
+            column={column}
+            options={options}
+            row={row}
+            lastCol={index === visibleColumns.length - 1}
+          />
         ))}
     </TableRow>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { CircularProgress, Collapse, makeStyles, Select, TableFooter, Tooltip, Typography } from '@material-ui/core';
+import { Collapse, makeStyles, Select, TableFooter, Tooltip, Typography } from '@material-ui/core';
 import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -27,6 +27,9 @@ import TablePagination from '@material-ui/core/TablePagination';
 import { CSVLink } from 'react-csv';
 import TableHeadButton from './components/TableHeadButton';
 import MUITableRow from './components/MUITableRow';
+import Skeleton from 'react-loading-skeleton';
+import MUITableFooterCell from './components/MUITableFooterCell';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -436,19 +439,19 @@ export default function MUIDatatable({
       </div>
       <div className={classes.tableContainer}>
         <Table className={classes.table}>
-          {options.loading ? (
-            <TableRow>
-              <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {typeof options.LoadingCell === 'function' ? (
-                  options.LoadingCell()
-                ) : (
-                  <div style={{ margin: 32 }}>
-                    <CircularProgress indeterminate />
-                  </div>
-                )}
-              </TableCell>
-            </TableRow>
-          ) : data.length === 0 ? (
+          {/*{options.loading ? (*/}
+          {/*  <TableRow>*/}
+          {/*    <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>*/}
+          {/*      {typeof options.LoadingCell === 'function' ? (*/}
+          {/*        options.LoadingCell()*/}
+          {/*      ) : (*/}
+          {/*        <div style={{ margin: 32 }}>*/}
+          {/*          <CircularProgress indeterminate />*/}
+          {/*        </div>*/}
+          {/*      )}*/}
+          {/*    </TableCell>*/}
+          {/*  </TableRow>*/}
+          {data.length === 0 ? (
             <TableRow>
               <TableCell style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {typeof options.NoRowsCell === 'function' ? (
@@ -469,17 +472,29 @@ export default function MUIDatatable({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {!!pageData &&
-                  pageData.map((row, itemIndex) => (
-                    <MUITableRow
-                      key={itemIndex}
-                      row={row}
-                      options={options}
-                      colValue={colValue}
-                      onRowClick={handleOnRowClick}
-                      visibleColumns={visibleColumns}
-                    />
-                  ))}
+                {options.loading
+                  ? new Array(rowsPerPage).fill(0).map((x, i) => (
+                      <TableRow key={i}>
+                        {visibleColumns.map(column => (
+                          <TableCell
+                            key={column.id}
+                            style={{ borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0 }}>
+                            <Skeleton height={24} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  : !!pageData &&
+                    pageData.map((row, itemIndex) => (
+                      <MUITableRow
+                        key={itemIndex}
+                        row={row}
+                        options={options}
+                        colValue={colValue}
+                        onRowClick={handleOnRowClick}
+                        visibleColumns={visibleColumns}
+                      />
+                    ))}
                 {options.fillEmptyRows &&
                   emptyRows.map((x, i) => (
                     <TableRow key={i}>
@@ -495,14 +510,13 @@ export default function MUIDatatable({
                 <TableFooter>
                   <TableRow>
                     {!!visibleColumns &&
-                      visibleColumns.map(column => (
-                        <TableCell
+                      visibleColumns.map((column, index) => (
+                        <MUITableFooterCell
                           key={`${column.title}-${column.id}`}
-                          {...column.props}
-                          align={column.align}
-                          style={{ width: column.shrink ? 1 : null }}>
-                          {typeof column.Footer === 'function' ? column.Footer(filteredData, column) : <></>}
-                        </TableCell>
+                          column={column}
+                          filteredData={filteredData}
+                          lastCol={index === visibleColumns.length - 1}
+                        />
                       ))}
                   </TableRow>
                 </TableFooter>
@@ -698,16 +712,28 @@ function NumericFilter({ filters, column, onSetFilter }) {
 
   return (
     <div style={{ display: 'flex' }}>
-      <FormControl style={{ flex: -1 }}>
-        <InputLabel />
-        <Select style={{ flex: -1 }} value={comparison} onChange={event => setComparison(event.target.value)}>
-          {Object.keys(operators).map(key => (
-            <MenuItem value={key}>{operators[key]}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
       <FormControl style={{ flex: 1 }}>
-        <TextField type="number" label={column.title} value={value} onChange={event => setValue(event.target.value)} />
+        <TextField
+          type="number"
+          label={column.title}
+          value={value}
+          onChange={event => setValue(event.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Select
+                  style={{ flex: -1 }}
+                  value={comparison}
+                  onChange={event => setComparison(event.target.value)}
+                  disableUnderline>
+                  {Object.keys(operators).map(key => (
+                    <MenuItem value={key}>{operators[key]}</MenuItem>
+                  ))}
+                </Select>
+              </InputAdornment>
+            ),
+          }}
+        />
       </FormControl>
     </div>
   );
