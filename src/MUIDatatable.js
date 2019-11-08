@@ -478,8 +478,8 @@ export default function MUIDatatable({
                         {visibleColumns.map(column => (
                           <TableCell
                             key={column.id}
-                            style={{ borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0 }}>
-                            <Skeleton height={24} />
+                            style={{ padding: 14, borderWidth: i === rowsPerPage - pageData.length - 1 ? null : 0 }}>
+                            <Skeleton height={20} />
                           </TableCell>
                         ))}
                       </TableRow>
@@ -514,6 +514,7 @@ export default function MUIDatatable({
                         <MUITableFooterCell
                           key={`${column.title}-${column.id}`}
                           column={column}
+                          options={options}
                           filteredData={filteredData}
                           lastCol={index === visibleColumns.length - 1}
                         />
