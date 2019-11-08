@@ -115,6 +115,7 @@ The component accepts the following props:
 |**`title`**|string||true|Title of the column
 |**`accessor`**|string||true*|Key of value in row to display.<br />*not required if using `Cell`
 |**`Cell`**|function||false|Render function of the cell. Overrides `accessor` <br/>`(value, row) => {}`
+|**`LoadingCell`**|component||false|Loading component of the cell. Overrides `accessor`
 |**`Footer`**|function||false|Render function of the cell footer. <br/>`(data, column) => {}`
 |**`sortable`**|bool|`true`|false|Can this column be sorted using column headers.
 |**`sortValue`**|function||false|Custom sort value. Defaults to `accessor` then `Cell`. <br />`(value, row) => {}`
