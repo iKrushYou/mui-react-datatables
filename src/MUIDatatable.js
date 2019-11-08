@@ -495,7 +495,8 @@ export default function MUIDatatable({
                         visibleColumns={visibleColumns}
                       />
                     ))}
-                {options.fillEmptyRows &&
+                {!options.loading &&
+                  options.fillEmptyRows &&
                   emptyRows.map((x, i) => (
                     <TableRow key={i}>
                       <TableCell
