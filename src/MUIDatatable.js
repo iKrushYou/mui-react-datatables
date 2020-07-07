@@ -121,7 +121,7 @@ export default function MUIDatatable({
   const classes = useStyles();
 
   const options = useMemo(() => mapObject(optionsInput, defaultOptions), [optionsInput]);
-  console.log('options', options);
+  //console.log('options', options);
 
   const [rowsPerPage, setRowsPerPage] = useState(defaultOptions.rowsPerPage);
 
@@ -330,7 +330,7 @@ export default function MUIDatatable({
       }
     });
 
-    console.log('generate filteredData rows: ' + tempData.length);
+    //console.log('generate filteredData rows: ' + tempData.length);
 
     return tempData;
   }, [data, filters, columnsInput, toggledColumns, sorts]);
@@ -389,7 +389,7 @@ export default function MUIDatatable({
 
   /*  Rendering  */
 
-  console.log('render');
+  //console.log('render');
 
   return (
     <Paper className={classes.root}>

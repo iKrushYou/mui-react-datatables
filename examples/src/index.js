@@ -49,7 +49,7 @@ function App() {
 
   useLayoutEffect(() => {
     setTimeout(() => {
-      console.log('stop loading');
+      // console.log('stop loading');
       setData(dataJson);
       setOptions(prev => ({ ...prev, loading: false }));
     }, 1500);
@@ -293,15 +293,15 @@ function App() {
               columns={columns}
               data={data}
               filtersRef={filters => {
-                console.log('setting filters', filters);
+                // console.log('setting filters', filters);
                 setFilters(filters);
               }}
               sortsRef={sorts => {
-                console.log('setting sorts', sorts);
+                // console.log('setting sorts', sorts);
                 setSorts(sorts);
               }}
               filteredDataRef={data => {
-                console.log('setting data', data);
+                // console.log('setting data', data);
                 setFilteredData(data);
               }}
             />
@@ -349,7 +349,7 @@ function CountPieChart({ data, accessor, colors }) {
     return counts;
   }, {});
 
-  console.log('counts', counts);
+  //console.log('counts', counts);
 
   const chartData = Object.keys(counts).map(key => ({ name: key, value: counts[key], fill: colors[key] }));
 
