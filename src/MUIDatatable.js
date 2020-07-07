@@ -323,7 +323,7 @@ export default function MUIDatatable({
       }
     });
 
-    console.log('generate filteredData rows: ' + tempData.length);
+    // console.log('generate filteredData rows: ' + tempData.length);
 
     return tempData;
   }, [data, filters, columnsInput, toggledColumns]);
@@ -382,7 +382,7 @@ export default function MUIDatatable({
 
   /*  Rendering  */
 
-  console.log('render');
+  // console.log('render');
 
   return (
     <Paper className={classes.root}>
